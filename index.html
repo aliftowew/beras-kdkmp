@@ -1,0 +1,405 @@
+<title>Alokasi Beras SPHP KDKMP</title>
+<meta name="description" content="Hitungan pembagian beras SPHP kemasan 5 kg ke Koperasi Desa/Kelurahan Merah Putih (KDKMP) untuk Oktober–Desember 2026, beserta cek defisit per tahap.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one working column; inputs strip on top, headline answer, per-month table, stage comparison chart + table, meeting summary. */
+:root {
+  --bg: #f4f6f3;
+  --surface: #ffffff;
+  --line: #dde3dc;
+  --fg: #17211b;
+  --fg-2: #4b5a50;
+  --fg-3: #77857b;
+  --accent: #1d6b45;
+  --accent-soft: #e2efe7;
+  --ref: #a8661a;
+  --good: #1d7a4a;
+  --good-bg: #e0f1e7;
+  --warn: #9a6a00;
+  --warn-bg: #fbf0d4;
+  --bad: #b3261e;
+  --bad-bg: #fbe3e1;
+  --display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --body: "IBM Plex Sans", "Segoe UI", Roboto, Arial, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #101512; --surface: #171e1a; --line: #2a342e; --fg: #e6ece7; --fg-2: #b0bdb4; --fg-3: #84938a;
+    --accent: #5cc08c; --accent-soft: #1d3326; --ref: #e0a352;
+    --good: #6fd09b; --good-bg: #173326; --warn: #e8bd5a; --warn-bg: #3a2f12; --bad: #f28b82; --bad-bg: #3d1a18;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #101512; --surface: #171e1a; --line: #2a342e; --fg: #e6ece7; --fg-2: #b0bdb4; --fg-3: #84938a;
+  --accent: #5cc08c; --accent-soft: #1d3326; --ref: #e0a352;
+  --good: #6fd09b; --good-bg: #173326; --warn: #e8bd5a; --warn-bg: #3a2f12; --bad: #f28b82; --bad-bg: #3d1a18;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 15px; line-height: 1.5; }
+.wrap { max-width: 1120px; margin: 0 auto; padding-inline: 20px; padding-block: 28px 56px; display: grid; gap: 22px; }
+h1, h2 { font-family: var(--display); text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(1.6rem, 3.4vw, 2.3rem); font-weight: 800; letter-spacing: -0.01em; }
+h2 { font-size: 1.15rem; font-weight: 700; }
+p { margin: 0; }
+.eyebrow { font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--fg-3); font-weight: 600; }
+.lede { color: var(--fg-2); max-width: 68ch; }
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+header { display: grid; gap: 8px; }
+
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 20px; display: grid; gap: 16px; min-width: 0; }
+.panel-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 8px; }
+.note { font-size: 0.82rem; color: var(--fg-3); }
+
+/* Inputs */
+.inputs { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; }
+.field { display: grid; gap: 5px; min-width: 0; }
+.field label { font-size: 0.8rem; color: var(--fg-2); font-weight: 500; }
+.field input { font-family: var(--mono); font-size: 1rem; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--fg); width: 100%; }
+.field input:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.field small { font-size: 0.74rem; color: var(--fg-3); }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { font-family: var(--body); font-size: 0.85rem; border: 1px solid var(--line); background: var(--bg); color: var(--fg); padding: 7px 12px; border-radius: 999px; cursor: pointer; display: grid; text-align: left; line-height: 1.25; }
+.chip b { font-family: var(--mono); font-weight: 500; }
+.chip span { font-size: 0.72rem; color: var(--fg-3); }
+.chip[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); }
+.chip:hover { border-color: var(--accent); }
+
+/* Answer */
+.answer { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 22px; align-items: start; }
+.big { font-family: var(--display); font-weight: 800; font-size: clamp(2.6rem, 7vw, 4.2rem); line-height: 1; color: var(--accent); font-variant-numeric: tabular-nums; }
+.big small { font-size: 0.32em; font-weight: 600; color: var(--fg-2); margin-left: 6px; }
+.facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 18px; }
+.fact { display: grid; gap: 2px; border-top: 1px solid var(--line); padding-top: 8px; }
+.fact .k { font-size: 0.76rem; color: var(--fg-3); }
+.fact .v { font-family: var(--mono); font-size: 1.05rem; font-variant-numeric: tabular-nums; }
+
+.pill { display: inline-flex; align-items: center; gap: 6px; font-size: 0.8rem; font-weight: 600; padding: 3px 10px; border-radius: 999px; white-space: nowrap; }
+.pill::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.pill.good { color: var(--good); background: var(--good-bg); }
+.pill.warn { color: var(--warn); background: var(--warn-bg); }
+.pill.bad { color: var(--bad); background: var(--bad-bg); }
+.verdict { display: grid; gap: 8px; background: var(--bg); border-radius: 8px; padding: 14px; }
+.verdict p { color: var(--fg-2); font-size: 0.9rem; }
+
+/* Tables */
+.tbl-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+th, td { padding: 9px 10px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
+th { font-size: 0.74rem; font-weight: 600; color: var(--fg-3); text-transform: uppercase; letter-spacing: 0.06em; }
+th:first-child, td:first-child { text-align: left; }
+td { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+td.txt { font-family: var(--body); }
+tr.sel td { background: var(--accent-soft); }
+tfoot td { font-weight: 600; border-bottom: none; }
+.share { width: 74px; font-family: var(--mono); padding: 4px 6px; border: 1px solid var(--line); border-radius: 5px; background: var(--bg); color: var(--fg); text-align: right; }
+
+/* Chart */
+.chart { position: relative; }
+.chart svg { width: 100%; height: auto; display: block; overflow: visible; }
+.chart text { font-family: var(--body); fill: var(--fg-2); font-size: 12px; }
+.chart .val { font-family: var(--mono); fill: var(--fg); font-size: 12px; }
+.chart .grid { stroke: var(--line); stroke-width: 1; }
+.chart .bar { fill: var(--accent); }
+.chart .bar.over { fill: var(--bad); }
+.chart .hit { fill: transparent; cursor: default; }
+.chart .ref { stroke: var(--ref); stroke-width: 2; stroke-dasharray: 5 4; }
+.chart .reflabel { fill: var(--ref); font-weight: 600; }
+.tip { position: absolute; pointer-events: none; background: var(--fg); color: var(--bg); font-size: 0.8rem; padding: 8px 10px; border-radius: 6px; max-width: 260px; line-height: 1.4; }
+.legend { display: flex; flex-wrap: wrap; gap: 16px; font-size: 0.8rem; color: var(--fg-2); }
+.legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -1px; margin-right: 6px; }
+.legend i.line { height: 0; border-top: 2px dashed var(--ref); border-radius: 0; width: 16px; vertical-align: 3px; }
+
+.summary { font-family: var(--mono); font-size: 0.85rem; white-space: pre-wrap; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 14px; margin: 0; color: var(--fg); overflow-x: auto; }
+.btn { font-family: var(--body); font-weight: 600; font-size: 0.85rem; background: var(--accent); color: var(--surface); border: none; border-radius: 6px; padding: 8px 14px; cursor: pointer; }
+.stack { display: grid; gap: 18px; }
+.chart { max-width: 760px; }
+
+@media (max-width: 760px) {
+  .answer { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .chart .bar { transition: width 0.25s ease; }
+}
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Bahan rapat · Distribusi beras SPHP lewat KDKMP</p>
+    <h1>Satu KDKMP dapat berapa sak?</h1>
+    <p class="lede">Beras SPHP dikemas per 5 kg lalu dibagi rata ke koperasi desa/kelurahan yang sudah operasional, selama Oktober–Desember 2026. Ubah angka di bawah; semua hitungan ikut berubah.</p>
+  </header>
+
+  <section class="panel" aria-labelledby="h-in">
+    <div class="panel-head"><h2 id="h-in">Angka dasar</h2><span class="note">Kotak bertanda * adalah asumsi. Ganti dengan data resmi bila ada.</span></div>
+    <div class="chips" role="group" aria-label="Pilih jumlah KDKMP">
+      <button class="chip" type="button" data-n="1096"><b>1.096</b><span>Operasional sekarang</span></button>
+      <button class="chip" type="button" data-n="35000"><b>35.000</b><span>Target Des 2026</span></button>
+      <button class="chip" type="button" data-n="80000"><b>80.000</b><span>Target Des 2028</span></button>
+    </div>
+    <div class="inputs">
+      <div class="field"><label for="in-n">Jumlah KDKMP penerima</label><input id="in-n" type="number" min="1" step="1" value="1096"><small>koperasi</small></div>
+      <div class="field"><label for="in-ton">Total beras SPHP</label><input id="in-ton" type="number" min="0" step="1000" value="1000000"><small>ton, untuk 3 bulan</small></div>
+      <div class="field"><label for="in-kg">Isi per kemasan</label><input id="in-kg" type="number" min="0.5" step="0.5" value="5"><small>kg per sak</small></div>
+      <div class="field"><label for="in-pop">Penduduk per desa *</label><input id="in-pop" type="number" min="0" step="100" value="3400"><small>jiwa (± 284 juta ÷ 84 ribu desa/kel)</small></div>
+      <div class="field"><label for="in-cons">Konsumsi beras *</label><input id="in-cons" type="number" min="0" step="0.1" value="6.8"><small>kg per orang per bulan</small></div>
+      <div class="field"><label for="in-share">Porsi dipenuhi SPHP KDKMP *</label><input id="in-share" type="number" min="0" max="100" step="1" value="25"><small>% dari konsumsi desa</small></div>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="h-ans">
+    <div class="panel-head"><h2 id="h-ans">Jawaban untuk <span id="ans-n" class="num"></span> KDKMP</h2><span class="note" id="ans-total"></span></div>
+    <div class="answer">
+      <div style="display:grid;gap:14px;min-width:0">
+        <div>
+          <p class="note">Rata-rata per KDKMP per bulan</p>
+          <div class="big" id="big-month"></div>
+        </div>
+        <div class="facts">
+          <div class="fact"><span class="k">Per KDKMP, total 3 bulan</span><span class="v" id="f-3m"></span></div>
+          <div class="fact"><span class="k">Per KDKMP per bulan, dalam ton</span><span class="v" id="f-ton"></span></div>
+          <div class="fact"><span class="k">Per KDKMP per hari (30 hari)</span><span class="v" id="f-day"></span></div>
+          <div class="fact"><span class="k">Truk 8 ton per KDKMP per bulan</span><span class="v" id="f-truck"></span></div>
+        </div>
+      </div>
+      <div class="verdict" id="verdict"></div>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="h-month">
+    <div class="panel-head"><h2 id="h-month">Rincian per bulan</h2><span class="note">Ubah porsi tiap bulan bila penyaluran tidak rata. Sak dibulatkan ke bawah; sisanya tetap di gudang Bulog.</span></div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Bulan</th><th>Porsi stok</th><th>Ton disalurkan</th><th>Total sak</th><th>Sak per KDKMP</th><th>Kg per KDKMP</th><th>Sisa sak</th></tr></thead>
+        <tbody id="tb-month"></tbody>
+        <tfoot id="tf-month"></tfoot>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="h-stage">
+    <div class="panel-head"><h2 id="h-stage">Cukup atau defisit di tiap tahap?</h2><span class="note">Kebutuhan = penduduk × konsumsi × porsi SPHP, untuk 3 bulan.</span></div>
+    <div class="stack">
+      <div style="display:grid;gap:10px;min-width:0">
+        <div class="legend"><span><i style="background:var(--accent)"></i>Kebutuhan 3 bulan, tertutup stok</span><span><i style="background:var(--bad)"></i>Kebutuhan melebihi stok</span><span><i class="line"></i>Stok SPHP tersedia</span></div>
+        <div class="chart" id="chart"></div>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Tahap</th><th>KDKMP</th><th>Dapat sak/bln</th><th>Butuh sak/bln</th><th>Status</th></tr></thead>
+          <tbody id="tb-stage"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Tahap</th><th>Butuh 3 bulan (ton)</th><th>Selisih vs stok (ton)</th><th>Butuh setahun (ton)</th><th>Stok setahun (4 × paket)</th><th>Kurang setahun (ton)</th></tr></thead>
+        <tbody id="tb-year"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="h-sum">
+    <div class="panel-head"><h2 id="h-sum">Ringkasan untuk rapat</h2><button class="btn" id="copy" type="button">Salin teks</button></div>
+    <pre class="summary" id="summary"></pre>
+  </section>
+</div>
+
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const fmt = (x, d = 0) => Number.isFinite(x) ? x.toLocaleString('id-ID', { minimumFractionDigits: d, maximumFractionDigits: d }) : '–';
+  const MONTHS = ['Oktober 2026', 'November 2026', 'Desember 2026'];
+  const STAGES = [
+    { name: 'Operasional sekarang', n: 1096 },
+    { name: 'Target Des 2026', n: 35000 },
+    { name: 'Target Des 2028', n: 80000 },
+  ];
+  let shares = [100 / 3, 100 / 3, 100 / 3];
+
+  function val(id, fallback) { const v = parseFloat($(id).value); return Number.isFinite(v) && v >= 0 ? v : fallback; }
+
+  function read() {
+    return {
+      n: Math.max(1, Math.round(val('in-n', 1096))),
+      ton: val('in-ton', 0),
+      kg: Math.max(0.1, val('in-kg', 5)),
+      pop: val('in-pop', 0),
+      cons: val('in-cons', 0),
+      share: val('in-share', 0) / 100,
+    };
+  }
+
+  function needSakMonth(s) { return s.pop * s.cons * s.share / s.kg; } // sak per KDKMP per bulan
+  function status(ratio) {
+    if (!Number.isFinite(ratio)) return { cls: 'warn', label: 'Isi asumsi' };
+    if (ratio < 0.95) return { cls: 'bad', label: 'Defisit' };
+    if (ratio <= 1.5) return { cls: 'good', label: 'Cukup' };
+    return { cls: 'warn', label: 'Berlebih' };
+  }
+
+  function render() {
+    const s = read();
+    const totalSak = s.ton * 1000 / s.kg;
+    const per3 = totalSak / s.n;
+    const perMonth = per3 / 3;
+    const need = needSakMonth(s);
+    const ratio = need > 0 ? perMonth / need : NaN;
+    const st = status(ratio);
+
+    document.querySelectorAll('.chip').forEach(c => c.setAttribute('aria-pressed', String(+c.dataset.n === s.n)));
+    $('ans-n').textContent = fmt(s.n);
+    $('ans-total').textContent = `${fmt(s.ton)} ton = ${fmt(totalSak)} sak @ ${fmt(s.kg, s.kg % 1 ? 1 : 0)} kg`;
+    $('big-month').innerHTML = `${fmt(perMonth)}<small>sak</small>`;
+    $('f-3m').textContent = `${fmt(per3)} sak`;
+    $('f-ton').textContent = `${fmt(perMonth * s.kg / 1000, 1)} ton`;
+    $('f-day').textContent = `${fmt(perMonth / 30)} sak`;
+    $('f-truck').textContent = `${fmt(perMonth * s.kg / 8000, 1)} truk`;
+
+    let msg;
+    if (st.label === 'Defisit') msg = `Tiap KDKMP dapat ${fmt(perMonth)} sak per bulan, kebutuhan desanya sekitar ${fmt(need)} sak. Kurang ${fmt(need - perMonth)} sak per KDKMP per bulan (${fmt((1 - ratio) * 100)}% di bawah kebutuhan).`;
+    else if (st.label === 'Cukup') msg = `Tiap KDKMP dapat ${fmt(perMonth)} sak per bulan, kebutuhan desanya sekitar ${fmt(need)} sak. Pasokan menutup kebutuhan (${fmt(ratio * 100)}%).`;
+    else if (st.label === 'Berlebih') msg = `Tiap KDKMP dapat ${fmt(perMonth)} sak per bulan, padahal kebutuhan desanya sekitar ${fmt(need)} sak, jadi ${fmt(ratio, 1)} kali lipat. Stok tidak defisit, tapi koperasi berisiko kewalahan menyimpan dan menjual. Perlu cek kapasitas gudang tiap KDKMP.`;
+    else msg = 'Isi asumsi penduduk, konsumsi, dan porsi SPHP untuk melihat status.';
+    $('verdict').innerHTML = `<span class="pill ${st.cls}">${st.label}</span><p>${msg}</p><p class="note">Status: defisit bila pasokan &lt; 95% kebutuhan; berlebih bila &gt; 150%.</p>`;
+
+    // Per month table
+    const shareSum = shares.reduce((a, b) => a + b, 0) || 1;
+    let rows = '', tTon = 0, tSak = 0, tPer = 0, tRest = 0;
+    MONTHS.forEach((m, i) => {
+      const p = shares[i] / shareSum;
+      const sak = Math.floor(totalSak * p);
+      const per = Math.floor(sak / s.n);
+      const rest = sak - per * s.n;
+      tTon += s.ton * p; tSak += sak; tPer += per; tRest += rest;
+      rows += `<tr><td class="txt">${m}</td><td><input class="share" id="share-${i}" type="number" min="0" step="1" value="${+shares[i].toFixed(1)}" aria-label="Porsi ${m} (%)"> %</td><td>${fmt(s.ton * p)}</td><td>${fmt(sak)}</td><td><b>${fmt(per)}</b></td><td>${fmt(per * s.kg)}</td><td>${fmt(rest)}</td></tr>`;
+    });
+    const active = document.activeElement && document.activeElement.id;
+    $('tb-month').innerHTML = rows;
+    $('tf-month').innerHTML = `<tr><td class="txt">Total 3 bulan</td><td>${fmt(shareSum, 1)} %</td><td>${fmt(tTon)}</td><td>${fmt(tSak)}</td><td>${fmt(tPer)}</td><td>${fmt(tPer * s.kg)}</td><td>${fmt(tRest)}</td></tr>`;
+    MONTHS.forEach((_, i) => {
+      const el = $('share-' + i);
+      el.addEventListener('change', () => { shares[i] = Math.max(0, parseFloat(el.value) || 0); render(); });
+    });
+    if (active && active.startsWith('share-')) $(active)?.focus();
+
+    // Stage tables
+    const stageData = STAGES.map(g => {
+      const pm = totalSak / g.n / 3;
+      const need3Ton = g.n * need * 3 * s.kg / 1000;
+      return { ...g, pm, need3Ton, ratio: need > 0 ? pm / need : NaN };
+    });
+    $('tb-stage').innerHTML = stageData.map(g => {
+      const t = status(g.ratio);
+      return `<tr class="${g.n === s.n ? 'sel' : ''}"><td class="txt">${g.name}</td><td>${fmt(g.n)}</td><td>${fmt(g.pm)}</td><td>${fmt(need)}</td><td class="txt"><span class="pill ${t.cls}">${t.label}</span></td></tr>`;
+    }).join('');
+    $('tb-year').innerHTML = stageData.map(g => {
+      const diff = s.ton - g.need3Ton;
+      const yearNeed = g.need3Ton * 4;
+      const yearStock = s.ton * 4;
+      const short = Math.max(0, yearNeed - yearStock);
+      return `<tr class="${g.n === s.n ? 'sel' : ''}"><td class="txt">${g.name} (${fmt(g.n)})</td><td>${fmt(g.need3Ton)}</td><td style="color:var(${diff < 0 ? '--bad' : '--good'})">${diff < 0 ? '−' : '+'}${fmt(Math.abs(diff))}</td><td>${fmt(yearNeed)}</td><td>${fmt(yearStock)}</td><td>${short > 0 ? fmt(short) : '0'}</td></tr>`;
+    }).join('');
+
+    drawChart(stageData, s.ton);
+    writeSummary(s, totalSak, perMonth, per3, need, st, stageData);
+  }
+
+  function niceStep(v) {
+    const p = Math.pow(10, Math.floor(Math.log10(v)));
+    for (const m of [1, 2, 2.5, 5, 10]) if (m * p >= v) return m * p;
+    return 10 * p;
+  }
+
+  function drawChart(data, stock) {
+    const W = 640, L = 150, R = 24, T = 26, rowH = 46, B = 30;
+    const H = T + rowH * data.length + B;
+    const top = Math.max(1, stock, ...data.map(d => d.need3Ton));
+    const step = niceStep(top / 4);
+    const max = Math.ceil(top * 1.02 / step) * step;
+    const x = v => L + (v / max) * (W - L - R);
+    const ticks = []; for (let t = 0; t <= max + 1e-9; t += step) ticks.push(t);
+    let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Kebutuhan beras 3 bulan per tahap dibanding stok SPHP">`;
+    ticks.forEach(t => {
+      svg += `<line class="grid" x1="${x(t)}" x2="${x(t)}" y1="${T - 6}" y2="${H - B}"></line>`;
+      svg += `<text x="${x(t)}" y="${H - B + 16}" text-anchor="middle">${fmtShort(t)}</text>`;
+    });
+    data.forEach((d, i) => {
+      const y = T + i * rowH + 8, h = rowH - 20;
+      const w = Math.max(2, x(d.need3Ton) - L);
+      const over = d.need3Ton > stock;
+      svg += `<text x="${L - 10}" y="${y + h / 2 - 3}" text-anchor="end">${d.name}</text>`;
+      svg += `<text x="${L - 10}" y="${y + h / 2 + 12}" text-anchor="end" style="fill:var(--fg-3);font-size:11px">${fmt(d.n)} KDKMP</text>`;
+      svg += `<path class="bar ${over ? 'over' : ''}" d="M${L},${y} H${L + w - 4} a4,4 0 0 1 4,4 V${y + h - 4} a4,4 0 0 1 -4,4 H${L} Z"></path>`;
+      const lx = L + w + 6, fits = lx + 70 < W;
+      svg += `<text class="val" x="${fits ? lx : L + w - 6}" y="${y + h / 2 + 4}" text-anchor="${fits ? 'start' : 'end'}" ${fits ? '' : 'style="fill:var(--surface)"'}>${fmtShort(d.need3Ton)} t</text>`;
+      svg += `<rect class="hit" x="0" y="${y - 6}" width="${W}" height="${h + 12}" data-i="${i}"></rect>`;
+    });
+    svg += `<line class="ref" x1="${x(stock)}" x2="${x(stock)}" y1="${T - 10}" y2="${H - B}"></line>`;
+    svg += `<text class="reflabel" x="${x(stock)}" y="${T - 14}" text-anchor="${x(stock) > W - 90 ? 'end' : 'middle'}">Stok ${fmtShort(stock)} t</text>`;
+    svg += `</svg><div class="tip" id="tip" hidden></div>`;
+    const box = $('chart');
+    box.innerHTML = svg;
+    const tip = $('tip');
+    box.querySelectorAll('.hit').forEach(r => {
+      r.addEventListener('mousemove', e => {
+        const d = data[+r.dataset.i];
+        const diff = stock - d.need3Ton;
+        tip.innerHTML = `<b>${d.name}</b> · ${fmt(d.n)} KDKMP<br>Butuh 3 bulan: ${fmt(d.need3Ton)} ton<br>Stok: ${fmt(stock)} ton<br>${diff >= 0 ? 'Sisa' : 'Kurang'}: ${fmt(Math.abs(diff))} ton`;
+        tip.hidden = false;
+        const b = box.getBoundingClientRect();
+        let left = e.clientX - b.left + 12;
+        if (left + 240 > b.width) left = e.clientX - b.left - 250;
+        tip.style.left = Math.max(0, left) + 'px';
+        tip.style.top = (e.clientY - b.top + 12) + 'px';
+      });
+      r.addEventListener('mouseleave', () => { tip.hidden = true; });
+    });
+  }
+
+  function fmtShort(v) {
+    if (v >= 1e6) return fmt(v / 1e6, v % 1e6 ? 2 : 0).replace(/,00$/, '') + ' jt';
+    if (v >= 1e3) return fmt(v / 1e3, 0) + ' rb';
+    return fmt(v);
+  }
+
+  function writeSummary(s, totalSak, perMonth, per3, need, st, stageData) {
+    const shareSum = shares.reduce((a, b) => a + b, 0) || 1;
+    const lines = [];
+    lines.push(`ALOKASI BERAS SPHP KE KDKMP, OKT–DES 2026`);
+    lines.push(`Stok: ${fmt(s.ton)} ton, kemasan ${fmt(s.kg, s.kg % 1 ? 1 : 0)} kg = ${fmt(totalSak)} sak.`);
+    lines.push(`Penerima: ${fmt(s.n)} KDKMP.`);
+    lines.push('');
+    lines.push(`Per KDKMP:`);
+    MONTHS.forEach((m, i) => {
+      const per = Math.floor(Math.floor(totalSak * shares[i] / shareSum) / s.n);
+      lines.push(`- ${m}: ${fmt(per)} sak (${fmt(per * s.kg / 1000, 1)} ton)`);
+    });
+    lines.push(`- Total 3 bulan: ± ${fmt(per3)} sak`);
+    lines.push('');
+    lines.push(`Kebutuhan per desa (asumsi ${fmt(s.pop)} jiwa × ${fmt(s.cons, 1)} kg × ${fmt(s.share * 100)}%): ± ${fmt(need)} sak/bulan.`);
+    lines.push(`Status ${fmt(s.n)} KDKMP: ${st.label.toUpperCase()}.`);
+    lines.push('');
+    lines.push(`Per tahap (stok ${fmt(s.ton)} ton per 3 bulan):`);
+    stageData.forEach(g => {
+      const diff = s.ton - g.need3Ton;
+      lines.push(`- ${g.name}, ${fmt(g.n)} KDKMP: dapat ${fmt(g.pm)} sak/bln per KDKMP; butuh ${fmt(g.need3Ton)} ton/3 bln; ${diff >= 0 ? 'sisa' : 'kurang'} ${fmt(Math.abs(diff))} ton (${status(g.ratio).label.toLowerCase()}).`);
+    });
+    $('summary').textContent = lines.join('\n');
+  }
+
+  document.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => { $('in-n').value = c.dataset.n; render(); }));
+  ['in-n', 'in-ton', 'in-kg', 'in-pop', 'in-cons', 'in-share'].forEach(id => $(id).addEventListener('input', render));
+  $('copy').addEventListener('click', () => {
+    const text = $('summary').textContent, btn = $('copy');
+    const done = () => { btn.textContent = 'Tersalin'; setTimeout(() => btn.textContent = 'Salin teks', 1500); };
+    const fallback = () => { const r = document.createRange(); r.selectNodeContents($('summary')); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); btn.textContent = 'Teks terpilih, tekan Ctrl+C'; };
+    try { navigator.clipboard.writeText(text).then(done, fallback); } catch (e) { fallback(); }
+  });
+  render();
+})();
+</script>
