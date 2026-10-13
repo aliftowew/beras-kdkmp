@@ -2,404 +2,641 @@
 <meta name="description" content="Hitungan pembagian beras SPHP kemasan 5 kg ke Koperasi Desa/Kelurahan Merah Putih (KDKMP) untuk Oktober–Desember 2026, beserta cek defisit per tahap.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
-/* Layout: one working column; inputs strip on top, headline answer, per-month table, stage comparison chart + table, meeting summary. */
+/* Gaya E-Purchasing: latar biru-abu pucat, sidebar putih 16rem, kartu rounded-2xl,
+   aksen biru hanya untuk yang aktif atau bisa ditekan. Semua warna lewat token. */
 :root {
-  --bg: #f4f6f3;
+  --ground: #f2f6fa;
   --surface: #ffffff;
-  --line: #dde3dc;
-  --fg: #17211b;
-  --fg-2: #4b5a50;
-  --fg-3: #77857b;
-  --accent: #1d6b45;
-  --accent-soft: #e2efe7;
-  --ref: #a8661a;
-  --good: #1d7a4a;
-  --good-bg: #e0f1e7;
-  --warn: #9a6a00;
-  --warn-bg: #fbf0d4;
-  --bad: #b3261e;
-  --bad-bg: #fbe3e1;
-  --display: "Archivo", "Helvetica Neue", Arial, sans-serif;
-  --body: "IBM Plex Sans", "Segoe UI", Roboto, Arial, sans-serif;
+  --surface-2: #eaf1f7;
+  --sidebar: #ffffff;
+  --ink: #0e2233;
+  --ink-2: #3d5568;
+  --muted: #566d80;
+  --line: #dde7f0;
+  --line-strong: #c3d4e2;
+  --accent: #0b77bd;
+  --accent-soft: #e3f0fa;
+  --accent-ink: #0a6ba9;
+  --on-accent: #ffffff;
+  --ok: #257534;   --ok-soft: #ddf3e1;
+  --warn: #a8490a; --warn-soft: #fdf0d3;
+  --crit: #b91c1c; --crit-soft: #fde3e0;
+  --bayang: 0 1px 3px rgb(14 34 51 / 0.07);
+  --bayang-naik: 0 8px 24px rgb(14 34 51 / 0.10);
+  --sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #101512; --surface: #171e1a; --line: #2a342e; --fg: #e6ece7; --fg-2: #b0bdb4; --fg-3: #84938a;
-    --accent: #5cc08c; --accent-soft: #1d3326; --ref: #e0a352;
-    --good: #6fd09b; --good-bg: #173326; --warn: #e8bd5a; --warn-bg: #3a2f12; --bad: #f28b82; --bad-bg: #3d1a18;
+    --ground: #071520; --surface: #0f2231; --surface-2: #16303f; --sidebar: #0b1c29;
+    --ink: #e6f0f8; --ink-2: #b3c8d8; --muted: #7e9bb0;
+    --line: #1e394b; --line-strong: #2b5169;
+    --accent: #4aa8e0; --accent-soft: #0e2d40; --accent-ink: #4aa8e0; --on-accent: #05131d;
+    --ok: #6ede8a; --ok-soft: #0d3320; --warn: #f0c069; --warn-soft: #3a2d12;
+    --crit: #f2938c; --crit-soft: #3e1d1b;
+    --bayang: 0 1px 3px rgb(0 0 0 / 0.4); --bayang-naik: 0 8px 24px rgb(0 0 0 / 0.5);
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #101512; --surface: #171e1a; --line: #2a342e; --fg: #e6ece7; --fg-2: #b0bdb4; --fg-3: #84938a;
-  --accent: #5cc08c; --accent-soft: #1d3326; --ref: #e0a352;
-  --good: #6fd09b; --good-bg: #173326; --warn: #e8bd5a; --warn-bg: #3a2f12; --bad: #f28b82; --bad-bg: #3d1a18;
+  --ground: #071520; --surface: #0f2231; --surface-2: #16303f; --sidebar: #0b1c29;
+  --ink: #e6f0f8; --ink-2: #b3c8d8; --muted: #7e9bb0;
+  --line: #1e394b; --line-strong: #2b5169;
+  --accent: #4aa8e0; --accent-soft: #0e2d40; --accent-ink: #4aa8e0; --on-accent: #05131d;
+  --ok: #6ede8a; --ok-soft: #0d3320; --warn: #f0c069; --warn-soft: #3a2d12;
+  --crit: #f2938c; --crit-soft: #3e1d1b;
+  --bayang: 0 1px 3px rgb(0 0 0 / 0.4); --bayang-naik: 0 8px 24px rgb(0 0 0 / 0.5);
   color-scheme: dark;
 }
+
 * { box-sizing: border-box; }
-body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 15px; line-height: 1.5; }
-.wrap { max-width: 1120px; margin: 0 auto; padding-inline: 20px; padding-block: 28px 56px; display: grid; gap: 22px; }
-h1, h2 { font-family: var(--display); text-wrap: balance; margin: 0; }
-h1 { font-size: clamp(1.6rem, 3.4vw, 2.3rem); font-weight: 800; letter-spacing: -0.01em; }
-h2 { font-size: 1.15rem; font-weight: 700; }
-p { margin: 0; }
-.eyebrow { font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--fg-3); font-weight: 600; }
-.lede { color: var(--fg-2); max-width: 68ch; }
-.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
-header { display: grid; gap: 8px; }
+html { scroll-behavior: smooth; scroll-padding-top: 72px; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body { background: var(--ground); color: var(--ink); font-family: var(--sans); font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+h1, h2, p { margin: 0; }
+a { color: inherit; }
+button { font: inherit; }
+.tnum { font-variant-numeric: tabular-nums; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+main:focus { outline: none; }
+.lewati { position: absolute; left: -9999px; top: 0; z-index: 60; }
+.lewati:focus-visible { left: 12px; top: 12px; padding: 10px 16px; border-radius: 12px; background: var(--accent); color: var(--on-accent); font-weight: 600; text-decoration: none; box-shadow: var(--bayang-naik); }
+.ikon { width: 1em; height: 1em; display: inline-block; vertical-align: middle; flex: none; }
 
-.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 20px; display: grid; gap: 16px; min-width: 0; }
-.panel-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 8px; }
-.note { font-size: 0.82rem; color: var(--fg-3); }
+/* Kerangka */
+.app { min-height: 100%; }
+@media (min-width: 1024px) { .app { display: grid; grid-template-columns: 16rem minmax(0, 1fr); } }
+.tirai { position: fixed; inset: 0; z-index: 30; background: color-mix(in srgb, var(--ink) 40%, transparent); border: 0; }
+.sidebar { position: fixed; inset-block: 0; left: 0; z-index: 40; width: 17rem; max-width: 85vw; display: flex; flex-direction: column; background: var(--sidebar); border-right: 1px solid var(--line); box-shadow: var(--bayang-naik); transform: translateX(-100%); visibility: hidden; transition: transform .2s; }
+.sidebar.buka { transform: none; visibility: visible; }
+@media (prefers-reduced-motion: reduce) { .sidebar { transition: none; } }
+@media (min-width: 1024px) {
+  .sidebar { position: sticky; top: 0; height: 100vh; width: auto; max-width: none; transform: none; visibility: visible; box-shadow: none; }
+  .tirai, .hanya-ponsel { display: none !important; }
+}
+.sidebar-isi { flex: 1; overflow-y: auto; padding: 16px 12px; display: flex; flex-direction: column; gap: 18px; }
+.merek { display: flex; align-items: center; gap: 10px; padding: 4px 8px; }
+.marka { width: 36px; height: 36px; border-radius: 10px; background: var(--accent); color: var(--on-accent); display: grid; place-items: center; font-size: 1.15rem; flex: none; }
+.merek-nama { font-size: 1.02rem; line-height: 1.15; font-weight: 800; letter-spacing: -0.02em; }
+.eyebrow { font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.grup { display: flex; flex-direction: column; gap: 2px; }
+.grup-label { font-size: 0.6rem; font-weight: 700; letter-spacing: 0.11em; text-transform: uppercase; color: var(--muted); padding: 0 12px; margin-bottom: 4px; }
+.menu { display: flex; align-items: center; gap: 12px; border-radius: 12px; padding: 7px 12px; font-size: 0.875rem; font-weight: 500; color: var(--ink-2); text-decoration: none; transition: background-color .15s; }
+.menu .ikon { font-size: 1.15rem; color: var(--muted); }
+.menu:hover { background: var(--surface-2); }
+.menu[aria-current="true"] { background: var(--accent-soft); color: var(--accent-ink); font-weight: 600; }
+.menu[aria-current="true"] .ikon { color: var(--accent-ink); }
+.sidebar-kaki { border-top: 1px solid var(--line); padding: 12px; }
+.chip-sesi { display: flex; align-items: center; gap: 8px; border-radius: 12px; background: var(--surface-2); padding: 8px 10px; }
+.chip-sesi .ikon { font-size: 1.1rem; color: var(--muted); }
+.chip-sesi b { display: block; font-size: 0.75rem; font-weight: 600; }
 
-/* Inputs */
-.inputs { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; }
-.field { display: grid; gap: 5px; min-width: 0; }
-.field label { font-size: 0.8rem; color: var(--fg-2); font-weight: 500; }
-.field input { font-family: var(--mono); font-size: 1rem; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--fg); width: 100%; }
-.field input:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.field small { font-size: 0.74rem; color: var(--fg-3); }
-.chips { display: flex; flex-wrap: wrap; gap: 8px; }
-.chip { font-family: var(--body); font-size: 0.85rem; border: 1px solid var(--line); background: var(--bg); color: var(--fg); padding: 7px 12px; border-radius: 999px; cursor: pointer; display: grid; text-align: left; line-height: 1.25; }
-.chip b { font-family: var(--mono); font-weight: 500; }
-.chip span { font-size: 0.72rem; color: var(--fg-3); }
-.chip[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); }
-.chip:hover { border-color: var(--accent); }
+.kolom { display: flex; flex-direction: column; min-width: 0; }
+.bar-atas { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; display: flex; align-items: center; gap: 8px; background: var(--surface); border-bottom: 1px solid var(--line); padding: 10px 20px; }
+@media (min-width: 640px) { .bar-atas { padding-inline: 32px; } }
+@media (min-width: 1024px) { .bar-atas { padding-inline: 40px; } }
+.bar-atas .kanan { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+.tombol-ikon { width: 40px; height: 40px; display: grid; place-items: center; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--ink-2); font-size: 1.15rem; cursor: pointer; transition: background-color .15s; }
+.tombol-ikon:hover { background: var(--surface-2); }
+.bar-judul { font-size: 0.85rem; color: var(--muted); }
+.bar-judul b { color: var(--ink); font-weight: 600; }
 
-/* Answer */
-.answer { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 22px; align-items: start; }
-.big { font-family: var(--display); font-weight: 800; font-size: clamp(2.6rem, 7vw, 4.2rem); line-height: 1; color: var(--accent); font-variant-numeric: tabular-nums; }
-.big small { font-size: 0.32em; font-weight: 600; color: var(--fg-2); margin-left: 6px; }
-.facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 18px; }
-.fact { display: grid; gap: 2px; border-top: 1px solid var(--line); padding-top: 8px; }
-.fact .k { font-size: 0.76rem; color: var(--fg-3); }
-.fact .v { font-family: var(--mono); font-size: 1.05rem; font-variant-numeric: tabular-nums; }
+main { min-width: 0; padding: 28px 20px 56px; display: flex; flex-direction: column; gap: 28px; max-width: 1240px; width: 100%; }
+@media (min-width: 640px) { main { padding-inline: 32px; } }
+@media (min-width: 1024px) { main { padding: 40px 40px 64px; } }
 
-.pill { display: inline-flex; align-items: center; gap: 6px; font-size: 0.8rem; font-weight: 600; padding: 3px 10px; border-radius: 999px; white-space: nowrap; }
-.pill::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
-.pill.good { color: var(--good); background: var(--good-bg); }
-.pill.warn { color: var(--warn); background: var(--warn-bg); }
-.pill.bad { color: var(--bad); background: var(--bad-bg); }
-.verdict { display: grid; gap: 8px; background: var(--bg); border-radius: 8px; padding: 14px; }
-.verdict p { color: var(--fg-2); font-size: 0.9rem; }
+/* Kepala halaman */
+.kepala { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.kepala-teks { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.kicker { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent-ink); }
+h1 { font-size: 1.875rem; line-height: 1.1; font-weight: 800; letter-spacing: -0.025em; text-wrap: balance; }
+@media (min-width: 640px) { h1 { font-size: 2.25rem; } }
+.keterangan { max-width: 64ch; color: var(--ink-2); font-size: 0.95rem; }
 
-/* Tables */
-.tbl-wrap { overflow-x: auto; }
-table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
-th, td { padding: 9px 10px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
-th { font-size: 0.74rem; font-weight: 600; color: var(--fg-3); text-transform: uppercase; letter-spacing: 0.06em; }
+/* Tombol */
+.tombol { display: inline-flex; align-items: center; gap: 8px; height: 40px; border-radius: 12px; padding: 0 16px; font-size: 0.875rem; font-weight: 600; cursor: pointer; border: 1px solid transparent; transition: opacity .15s, background-color .15s; white-space: nowrap; }
+.tombol .ikon { font-size: 1.1rem; }
+.tombol.utama { background: var(--accent); color: var(--on-accent); box-shadow: var(--bayang); }
+.tombol.utama:hover { opacity: .9; }
+.tombol.garis { border-color: var(--line); background: var(--surface); color: var(--ink-2); }
+.tombol.garis:hover { background: var(--surface-2); }
+
+/* Chip penyaring */
+.bilah { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.bilah .eyebrow { margin-right: 4px; }
+.chip { display: flex; align-items: center; gap: 6px; border-radius: 999px; padding: 6px 14px; font-size: 0.875rem; font-weight: 500; border: 1px solid var(--line); background: var(--surface); color: var(--ink-2); cursor: pointer; transition: background-color .15s; }
+.chip:hover { background: var(--surface-2); }
+.chip small { font-size: 0.75rem; color: var(--muted); font-weight: 500; }
+.chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600; }
+.chip[aria-pressed="true"] small { color: var(--on-accent); opacity: .85; }
+
+/* Statistik */
+.statistik-grid { display: grid; gap: 16px; }
+@media (min-width: 640px) { .statistik-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1280px) { .statistik-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.kartu { border-radius: 16px; border: 1px solid var(--line); background: var(--surface); box-shadow: var(--bayang); }
+.statistik { display: flex; flex-direction: column; gap: 12px; padding: 16px; }
+.kotak-ikon { width: 36px; height: 36px; border-radius: 12px; display: grid; place-items: center; font-size: 1.25rem; }
+.nada-aksen { background: var(--accent-soft); color: var(--accent-ink); }
+.nada-ok { background: var(--ok-soft); color: var(--ok); }
+.nada-warn { background: var(--warn-soft); color: var(--warn); }
+.nada-crit { background: var(--crit-soft); color: var(--crit); }
+.nada-netral { background: var(--surface-2); color: var(--muted); }
+.nilai { font-size: 1.7rem; line-height: 1; font-weight: 800; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+.nilai small { font-size: 0.55em; font-weight: 600; color: var(--muted); letter-spacing: 0; margin-left: 4px; }
+.nilai.aksen { color: var(--accent-ink); }
+.label { font-size: 0.875rem; font-weight: 500; color: var(--ink-2); }
+.catatan-kecil { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+
+/* Catatan bertepi */
+.catatan { display: flex; gap: 12px; border-radius: 16px 16px 16px 16px; border-top-left-radius: 8px; border-bottom-left-radius: 8px; border: 1px solid var(--line); border-left-width: 4px; background: var(--surface); padding: 14px 16px; box-shadow: var(--bayang); }
+.catatan > .ikon { font-size: 1.25rem; margin-top: 2px; }
+.catatan.ok { border-left-color: var(--ok); } .catatan.ok > .ikon { color: var(--ok); }
+.catatan.warn { border-left-color: var(--warn); } .catatan.warn > .ikon { color: var(--warn); }
+.catatan.crit { border-left-color: var(--crit); } .catatan.crit > .ikon { color: var(--crit); }
+.catatan.aksen { border-left-color: var(--accent); } .catatan.aksen > .ikon { color: var(--accent-ink); }
+.catatan-isi { display: flex; flex-direction: column; gap: 6px; font-size: 0.875rem; color: var(--ink-2); min-width: 0; }
+.catatan-isi strong { color: var(--ink); }
+
+/* Lencana */
+.lencana { display: inline-flex; align-items: center; gap: 4px; border-radius: 999px; padding: 4px 10px; font-size: 0.72rem; font-weight: 600; white-space: nowrap; }
+.lencana .ikon { font-size: 0.95rem; }
+.lencana.ok { background: var(--ok-soft); color: var(--ok); }
+.lencana.warn { background: var(--warn-soft); color: var(--warn); }
+.lencana.crit { background: var(--crit-soft); color: var(--crit); }
+.lencana.netral { background: var(--surface-2); color: var(--muted); }
+
+/* Panel */
+.panel { overflow: hidden; }
+.panel-kepala { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--line); padding: 14px 20px; }
+.panel-kepala h2 { font-size: 0.95rem; font-weight: 700; letter-spacing: -0.01em; display: flex; align-items: center; gap: 8px; }
+.panel-kepala h2 .ikon { color: var(--muted); font-size: 1.1rem; }
+.panel-kepala .kanan { font-size: 0.75rem; color: var(--muted); }
+.panel-isi { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+.gulir { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+th { border-bottom: 1px solid var(--line); padding: 12px 16px; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); text-align: right; white-space: nowrap; }
+td { border-top: 1px solid var(--line); padding: 12px 16px; vertical-align: middle; text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--ink-2); }
+thead tr:first-child th { border-top: 0; }
+tbody tr:first-child td { border-top: 0; }
 th:first-child, td:first-child { text-align: left; }
-td { font-family: var(--mono); font-variant-numeric: tabular-nums; }
-td.txt { font-family: var(--body); }
-tr.sel td { background: var(--accent-soft); }
-tfoot td { font-weight: 600; border-bottom: none; }
-.share { width: 74px; font-family: var(--mono); padding: 4px 6px; border: 1px solid var(--line); border-radius: 5px; background: var(--bg); color: var(--fg); text-align: right; }
+td.kuat, td b { color: var(--ink); font-weight: 600; }
+tbody tr:hover td { background: var(--surface-2); }
+tr.terpilih td { background: var(--accent-soft); }
+tr.terpilih td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
+tfoot td { border-top: 1px solid var(--line-strong); font-weight: 600; color: var(--ink); background: var(--surface-2); }
+.isian-kecil { width: 76px; text-align: right; font-variant-numeric: tabular-nums; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); padding: 5px 8px; font: inherit; }
+.isian-kecil:focus-visible { border-color: var(--accent); }
 
-/* Chart */
-.chart { position: relative; }
-.chart svg { width: 100%; height: auto; display: block; overflow: visible; }
-.chart text { font-family: var(--body); fill: var(--fg-2); font-size: 12px; }
-.chart .val { font-family: var(--mono); fill: var(--fg); font-size: 12px; }
-.chart .grid { stroke: var(--line); stroke-width: 1; }
-.chart .bar { fill: var(--accent); }
-.chart .bar.over { fill: var(--bad); }
-.chart .hit { fill: transparent; cursor: default; }
-.chart .ref { stroke: var(--ref); stroke-width: 2; stroke-dasharray: 5 4; }
-.chart .reflabel { fill: var(--ref); font-weight: 600; }
-.tip { position: absolute; pointer-events: none; background: var(--fg); color: var(--bg); font-size: 0.8rem; padding: 8px 10px; border-radius: 6px; max-width: 260px; line-height: 1.4; }
-.legend { display: flex; flex-wrap: wrap; gap: 16px; font-size: 0.8rem; color: var(--fg-2); }
-.legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -1px; margin-right: 6px; }
-.legend i.line { height: 0; border-top: 2px dashed var(--ref); border-radius: 0; width: 16px; vertical-align: 3px; }
+/* Isian */
+.isian-grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }
+.isian { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.isian input { width: 100%; min-width: 0; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); padding: 8px 12px; font: inherit; font-size: 0.95rem; font-variant-numeric: tabular-nums; }
+.isian input:focus-visible { border-color: var(--accent); }
+.isian .bantuan { font-size: 0.75rem; color: var(--muted); }
+.wadah-asumsi { border-radius: 16px; border: 1px dashed var(--line-strong); padding: 16px; display: flex; flex-direction: column; gap: 14px; }
 
-.summary { font-family: var(--mono); font-size: 0.85rem; white-space: pre-wrap; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 14px; margin: 0; color: var(--fg); overflow-x: auto; }
-.btn { font-family: var(--body); font-weight: 600; font-size: 0.85rem; background: var(--accent); color: var(--surface); border: none; border-radius: 6px; padding: 8px 14px; cursor: pointer; }
-.stack { display: grid; gap: 18px; }
-.chart { max-width: 760px; }
+/* Grafik */
+.dua { display: grid; gap: 20px; }
+@media (min-width: 1560px) { .dua { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); align-items: start; } }
+.grafik { position: relative; }
+.grafik svg { width: 100%; height: auto; display: block; overflow: visible; }
+.grafik text { font-family: var(--sans); fill: var(--ink-2); font-size: 12px; }
+.grafik .sub { fill: var(--muted); font-size: 11px; }
+.grafik .angka { fill: var(--ink); font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.grafik .kisi { stroke: var(--line); stroke-width: 1; }
+.grafik .batang { fill: var(--accent); }
+.grafik .batang.lebih { fill: var(--crit); }
+.grafik .stok { stroke: var(--ink-2); stroke-width: 2; stroke-dasharray: 5 4; }
+.grafik .stok-label { fill: var(--ink); font-weight: 700; font-size: 11.5px; }
+.grafik .sasaran { fill: transparent; }
+.tip { position: absolute; pointer-events: none; z-index: 5; background: var(--surface); color: var(--ink-2); border: 1px solid var(--line-strong); box-shadow: var(--bayang-naik); font-size: 0.8rem; padding: 10px 12px; border-radius: 12px; max-width: 260px; line-height: 1.45; }
+.tip b { color: var(--ink); }
+.legenda { display: flex; flex-wrap: wrap; gap: 16px; font-size: 0.78rem; color: var(--ink-2); }
+.legenda span { display: inline-flex; align-items: center; gap: 6px; }
+.legenda i { width: 12px; height: 12px; border-radius: 4px; display: inline-block; }
+.legenda i.garis { height: 0; width: 16px; border-top: 2px dashed var(--ink-2); border-radius: 0; }
 
-@media (max-width: 760px) {
-  .answer { grid-template-columns: 1fr; }
-}
-@media (prefers-reduced-motion: no-preference) {
-  .chart .bar { transition: width 0.25s ease; }
-}
+.teks-rapat { font-family: var(--mono); font-size: 0.82rem; white-space: pre-wrap; margin: 0; color: var(--ink); background: var(--surface-2); border-radius: 12px; padding: 16px; overflow-x: auto; line-height: 1.6; }
+.rekap { display: flex; flex-wrap: wrap; gap: 12px; }
+.rekap > div { flex: 1; min-width: 11rem; border-radius: 16px; border: 1px solid var(--line); background: var(--surface); padding: 12px 16px; box-shadow: var(--bayang); }
+.rekap .v { margin-top: 4px; font-size: 1.25rem; font-weight: 700; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
 </style>
 
-<div class="wrap">
-  <header>
-    <p class="eyebrow">Bahan rapat · Distribusi beras SPHP lewat KDKMP</p>
-    <h1>Satu KDKMP dapat berapa sak?</h1>
-    <p class="lede">Beras SPHP dikemas per 5 kg lalu dibagi rata ke koperasi desa/kelurahan yang sudah operasional, selama Oktober–Desember 2026. Ubah angka di bawah; semua hitungan ikut berubah.</p>
-  </header>
+<div class="app">
+  <a href="#konten" class="lewati">Lewati ke konten</a>
+  <button class="tirai" id="tirai" type="button" aria-label="Tutup menu" hidden></button>
 
-  <section class="panel" aria-labelledby="h-in">
-    <div class="panel-head"><h2 id="h-in">Angka dasar</h2><span class="note">Kotak bertanda * adalah asumsi. Ganti dengan data resmi bila ada.</span></div>
-    <div class="chips" role="group" aria-label="Pilih jumlah KDKMP">
-      <button class="chip" type="button" data-n="1096"><b>1.096</b><span>Operasional sekarang</span></button>
-      <button class="chip" type="button" data-n="35000"><b>35.000</b><span>Target Des 2026</span></button>
-      <button class="chip" type="button" data-n="80000"><b>80.000</b><span>Target Des 2028</span></button>
-    </div>
-    <div class="inputs">
-      <div class="field"><label for="in-n">Jumlah KDKMP penerima</label><input id="in-n" type="number" min="1" step="1" value="1096"><small>koperasi</small></div>
-      <div class="field"><label for="in-ton">Total beras SPHP</label><input id="in-ton" type="number" min="0" step="1000" value="1000000"><small>ton, untuk 3 bulan</small></div>
-      <div class="field"><label for="in-kg">Isi per kemasan</label><input id="in-kg" type="number" min="0.5" step="0.5" value="5"><small>kg per sak</small></div>
-      <div class="field"><label for="in-pop">Penduduk per desa *</label><input id="in-pop" type="number" min="0" step="100" value="3400"><small>jiwa (± 284 juta ÷ 84 ribu desa/kel)</small></div>
-      <div class="field"><label for="in-cons">Konsumsi beras *</label><input id="in-cons" type="number" min="0" step="0.1" value="6.8"><small>kg per orang per bulan</small></div>
-      <div class="field"><label for="in-share">Porsi dipenuhi SPHP KDKMP *</label><input id="in-share" type="number" min="0" max="100" step="1" value="25"><small>% dari konsumsi desa</small></div>
-    </div>
-  </section>
-
-  <section class="panel" aria-labelledby="h-ans">
-    <div class="panel-head"><h2 id="h-ans">Jawaban untuk <span id="ans-n" class="num"></span> KDKMP</h2><span class="note" id="ans-total"></span></div>
-    <div class="answer">
-      <div style="display:grid;gap:14px;min-width:0">
+  <aside class="sidebar" id="menu-utama" aria-label="Menu utama">
+    <div class="sidebar-isi">
+      <div class="merek">
+        <span class="marka" data-ikon="inventory_2"></span>
         <div>
-          <p class="note">Rata-rata per KDKMP per bulan</p>
-          <div class="big" id="big-month"></div>
+          <div class="merek-nama">Alokasi SPHP</div>
+          <div class="eyebrow">KDKMP · Okt–Des 2026</div>
         </div>
-        <div class="facts">
-          <div class="fact"><span class="k">Per KDKMP, total 3 bulan</span><span class="v" id="f-3m"></span></div>
-          <div class="fact"><span class="k">Per KDKMP per bulan, dalam ton</span><span class="v" id="f-ton"></span></div>
-          <div class="fact"><span class="k">Per KDKMP per hari (30 hari)</span><span class="v" id="f-day"></span></div>
-          <div class="fact"><span class="k">Truk 8 ton per KDKMP per bulan</span><span class="v" id="f-truck"></span></div>
+        <button class="tombol-ikon hanya-ponsel" id="tutup-menu" type="button" aria-label="Tutup menu" style="margin-left:auto" data-ikon="close"></button>
+      </div>
+      <nav class="grup-wrap" style="display:flex;flex-direction:column;gap:16px">
+        <div class="grup">
+          <div class="grup-label">Pemantauan</div>
+          <a class="menu" href="#ringkasan" aria-current="true"><span data-ikon="dashboard"></span>Ringkasan</a>
+          <a class="menu" href="#bulanan"><span data-ikon="calendar_month"></span>Rincian bulanan</a>
+          <a class="menu" href="#tahap"><span data-ikon="insights"></span>Cukup atau defisit</a>
         </div>
-      </div>
-      <div class="verdict" id="verdict"></div>
+        <div class="grup">
+          <div class="grup-label">Bahan rapat</div>
+          <a class="menu" href="#asumsi"><span data-ikon="tune"></span>Angka dasar</a>
+          <a class="menu" href="#rapat"><span data-ikon="description"></span>Teks untuk rapat</a>
+        </div>
+      </nav>
     </div>
-  </section>
-
-  <section class="panel" aria-labelledby="h-month">
-    <div class="panel-head"><h2 id="h-month">Rincian per bulan</h2><span class="note">Ubah porsi tiap bulan bila penyaluran tidak rata. Sak dibulatkan ke bawah; sisanya tetap di gudang Bulog.</span></div>
-    <div class="tbl-wrap">
-      <table>
-        <thead><tr><th>Bulan</th><th>Porsi stok</th><th>Ton disalurkan</th><th>Total sak</th><th>Sak per KDKMP</th><th>Kg per KDKMP</th><th>Sisa sak</th></tr></thead>
-        <tbody id="tb-month"></tbody>
-        <tfoot id="tf-month"></tfoot>
-      </table>
-    </div>
-  </section>
-
-  <section class="panel" aria-labelledby="h-stage">
-    <div class="panel-head"><h2 id="h-stage">Cukup atau defisit di tiap tahap?</h2><span class="note">Kebutuhan = penduduk × konsumsi × porsi SPHP, untuk 3 bulan.</span></div>
-    <div class="stack">
-      <div style="display:grid;gap:10px;min-width:0">
-        <div class="legend"><span><i style="background:var(--accent)"></i>Kebutuhan 3 bulan, tertutup stok</span><span><i style="background:var(--bad)"></i>Kebutuhan melebihi stok</span><span><i class="line"></i>Stok SPHP tersedia</span></div>
-        <div class="chart" id="chart"></div>
-      </div>
-      <div class="tbl-wrap">
-        <table>
-          <thead><tr><th>Tahap</th><th>KDKMP</th><th>Dapat sak/bln</th><th>Butuh sak/bln</th><th>Status</th></tr></thead>
-          <tbody id="tb-stage"></tbody>
-        </table>
+    <div class="sidebar-kaki">
+      <div class="chip-sesi">
+        <span data-ikon="schedule"></span>
+        <div><div class="eyebrow">Rapat</div><b>Rabu, 09.30 WIB</b></div>
       </div>
     </div>
-    <div class="tbl-wrap">
-      <table>
-        <thead><tr><th>Tahap</th><th>Butuh 3 bulan (ton)</th><th>Selisih vs stok (ton)</th><th>Butuh setahun (ton)</th><th>Stok setahun (4 × paket)</th><th>Kurang setahun (ton)</th></tr></thead>
-        <tbody id="tb-year"></tbody>
-      </table>
-    </div>
-  </section>
+  </aside>
 
-  <section class="panel" aria-labelledby="h-sum">
-    <div class="panel-head"><h2 id="h-sum">Ringkasan untuk rapat</h2><button class="btn" id="copy" type="button">Salin teks</button></div>
-    <pre class="summary" id="summary"></pre>
-  </section>
+  <div class="kolom">
+    <div class="bar-atas">
+      <button class="tombol-ikon hanya-ponsel" id="buka-menu" type="button" aria-label="Buka menu" aria-expanded="false" aria-controls="menu-utama" data-ikon="menu"></button>
+      <span class="bar-judul">Distribusi beras SPHP · <b id="bar-n">1.096 KDKMP</b></span>
+      <div class="kanan">
+        <button class="tombol-ikon" id="tema" type="button" aria-label="Ganti tema terang/gelap"><span data-ikon="dark_mode" id="ikon-tema"></span></button>
+      </div>
+    </div>
+
+    <main id="konten" tabindex="-1">
+      <section id="ringkasan" style="display:flex;flex-direction:column;gap:24px">
+        <header class="kepala">
+          <div class="kepala-teks">
+            <span class="kicker">Distribusi beras SPHP</span>
+            <h1>Satu KDKMP dapat berapa sak?</h1>
+            <p class="keterangan">Beras SPHP dikemas per 5 kg, lalu dibagi rata ke koperasi desa/kelurahan yang sudah operasional selama Oktober–Desember 2026.</p>
+          </div>
+          <button class="tombol utama" id="salin-atas" type="button"><span data-ikon="description"></span>Salin teks rapat</button>
+        </header>
+
+        <div class="bilah" role="group" aria-label="Pilih jumlah KDKMP">
+          <span class="eyebrow">Jumlah KDKMP</span>
+          <button class="chip" type="button" data-n="1096">1.096 <small>operasional</small></button>
+          <button class="chip" type="button" data-n="35000">35.000 <small>target Des 2026</small></button>
+          <button class="chip" type="button" data-n="80000">80.000 <small>target Des 2028</small></button>
+        </div>
+
+        <div class="statistik-grid">
+          <div class="kartu statistik">
+            <span class="kotak-ikon nada-aksen" data-ikon="inventory_2"></span>
+            <div class="nilai aksen" id="s-bulan"></div>
+            <div><div class="label">Sak per KDKMP per bulan</div><div class="catatan-kecil">sama untuk Okt, Nov, Des</div></div>
+          </div>
+          <div class="kartu statistik">
+            <span class="kotak-ikon nada-netral" data-ikon="calendar_month"></span>
+            <div class="nilai" id="s-3bln"></div>
+            <div><div class="label">Sak per KDKMP, 3 bulan</div><div class="catatan-kecil" id="s-3bln-c"></div></div>
+          </div>
+          <div class="kartu statistik">
+            <span class="kotak-ikon nada-netral" data-ikon="warehouse"></span>
+            <div class="nilai" id="s-ton"></div>
+            <div><div class="label">Ton per KDKMP per bulan</div><div class="catatan-kecil" id="s-hari"></div></div>
+          </div>
+          <div class="kartu statistik">
+            <span class="kotak-ikon nada-netral" data-ikon="local_shipping"></span>
+            <div class="nilai" id="s-truk"></div>
+            <div><div class="label">Truk 8 ton per KDKMP per bulan</div><div class="catatan-kecil">untuk perencanaan angkutan</div></div>
+          </div>
+        </div>
+
+        <div class="catatan" id="vonis"></div>
+      </section>
+
+      <section id="bulanan" class="kartu panel" aria-labelledby="h-bulanan">
+        <div class="panel-kepala">
+          <h2 id="h-bulanan"><span data-ikon="calendar_month"></span>Rincian per bulan</h2>
+          <span class="kanan">Sak dibulatkan ke bawah; sisanya tetap di gudang Bulog</span>
+        </div>
+        <div class="gulir">
+          <table>
+            <thead><tr><th scope="col">Bulan</th><th scope="col">Porsi stok</th><th scope="col">Ton disalurkan</th><th scope="col">Total sak</th><th scope="col">Sak per KDKMP</th><th scope="col">Kg per KDKMP</th><th scope="col">Sisa sak</th></tr></thead>
+            <tbody id="tb-bulan"></tbody>
+            <tfoot id="tf-bulan"></tfoot>
+          </table>
+        </div>
+      </section>
+
+      <section id="tahap" class="kartu panel" aria-labelledby="h-tahap">
+        <div class="panel-kepala">
+          <h2 id="h-tahap"><span data-ikon="insights"></span>Cukup atau defisit di tiap tahap?</h2>
+          <span class="kanan">Kebutuhan = penduduk × konsumsi × porsi SPHP</span>
+        </div>
+        <div class="panel-isi">
+          <div class="rekap" id="rekap"></div>
+          <div class="dua">
+            <div style="display:flex;flex-direction:column;gap:12px;min-width:0">
+              <div class="eyebrow">Kebutuhan beras 3 bulan dibanding stok</div>
+              <div class="legenda">
+                <span><i style="background:var(--accent)"></i>Tertutup stok</span>
+                <span><i style="background:var(--crit)"></i>Melebihi stok</span>
+                <span><i class="garis"></i>Stok SPHP tersedia</span>
+              </div>
+              <div class="grafik" id="grafik" style="max-width:760px"></div>
+            </div>
+            <div class="kartu panel" style="box-shadow:none">
+              <div class="gulir">
+                <table>
+                  <thead><tr><th scope="col">Tahap</th><th scope="col">Dapat sak/bln</th><th scope="col">Butuh sak/bln</th><th scope="col" style="text-align:left">Status</th></tr></thead>
+                  <tbody id="tb-tahap"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="gulir" style="border-top:1px solid var(--line)">
+          <table>
+            <thead><tr><th scope="col">Tahap</th><th scope="col">Butuh 3 bulan (ton)</th><th scope="col">Selisih vs stok (ton)</th><th scope="col">Butuh setahun (ton)</th><th scope="col">Stok setahun (4 × paket)</th><th scope="col">Kurang setahun (ton)</th></tr></thead>
+            <tbody id="tb-tahun"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="asumsi" class="kartu panel" aria-labelledby="h-asumsi">
+        <div class="panel-kepala">
+          <h2 id="h-asumsi"><span data-ikon="tune"></span>Angka dasar</h2>
+          <span class="kanan">Ubah angka; semua hitungan ikut berubah</span>
+        </div>
+        <div class="panel-isi">
+          <div class="isian-grid">
+            <label class="isian"><span class="eyebrow">Jumlah KDKMP penerima</span><input id="in-n" type="number" min="1" step="1" value="1096"><span class="bantuan">koperasi</span></label>
+            <label class="isian"><span class="eyebrow">Total beras SPHP</span><input id="in-ton" type="number" min="0" step="1000" value="1000000"><span class="bantuan">ton, untuk 3 bulan</span></label>
+            <label class="isian"><span class="eyebrow">Isi per kemasan</span><input id="in-kg" type="number" min="0.5" step="0.5" value="5"><span class="bantuan">kg per sak</span></label>
+          </div>
+          <div class="wadah-asumsi">
+            <div class="catatan-kecil" style="margin:0;display:flex;gap:6px;align-items:center"><span data-ikon="info"></span>Asumsi kebutuhan desa. Ganti dengan data resmi bila ada.</div>
+            <div class="isian-grid">
+              <label class="isian"><span class="eyebrow">Penduduk per desa</span><input id="in-pop" type="number" min="0" step="100" value="3400"><span class="bantuan">jiwa (± 284 juta ÷ 84 ribu desa/kel)</span></label>
+              <label class="isian"><span class="eyebrow">Konsumsi beras</span><input id="in-cons" type="number" min="0" step="0.1" value="6.8"><span class="bantuan">kg per orang per bulan</span></label>
+              <label class="isian"><span class="eyebrow">Porsi dipenuhi SPHP KDKMP</span><input id="in-share" type="number" min="0" max="100" step="1" value="25"><span class="bantuan">% dari konsumsi desa</span></label>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="rapat" class="kartu panel" aria-labelledby="h-rapat">
+        <div class="panel-kepala">
+          <h2 id="h-rapat"><span data-ikon="description"></span>Teks untuk rapat</h2>
+          <button class="tombol garis" id="salin" type="button"><span data-ikon="content_copy"></span><span id="salin-label">Salin teks</span></button>
+        </div>
+        <div class="panel-isi">
+          <pre class="teks-rapat" id="ringkasan-teks"></pre>
+        </div>
+      </section>
+    </main>
+  </div>
 </div>
 
 <script>
 (function () {
+  // Ikon Feather (MIT), dipetakan dengan nama bergaya Material seperti di proyek E-Purchasing.
+  const IKON = {"dashboard": "<rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"2\" ry=\"2\"></rect><line x1=\"3\" y1=\"9\" x2=\"21\" y2=\"9\"></line><line x1=\"9\" y1=\"21\" x2=\"9\" y2=\"9\"></line>", "calendar_month": "<rect x=\"3\" y=\"4\" width=\"18\" height=\"18\" rx=\"2\" ry=\"2\"></rect><line x1=\"16\" y1=\"2\" x2=\"16\" y2=\"6\"></line><line x1=\"8\" y1=\"2\" x2=\"8\" y2=\"6\"></line><line x1=\"3\" y1=\"10\" x2=\"21\" y2=\"10\"></line>", "insights": "<line x1=\"18\" y1=\"20\" x2=\"18\" y2=\"10\"></line><line x1=\"12\" y1=\"20\" x2=\"12\" y2=\"4\"></line><line x1=\"6\" y1=\"20\" x2=\"6\" y2=\"14\"></line>", "tune": "<line x1=\"4\" y1=\"21\" x2=\"4\" y2=\"14\"></line><line x1=\"4\" y1=\"10\" x2=\"4\" y2=\"3\"></line><line x1=\"12\" y1=\"21\" x2=\"12\" y2=\"12\"></line><line x1=\"12\" y1=\"8\" x2=\"12\" y2=\"3\"></line><line x1=\"20\" y1=\"21\" x2=\"20\" y2=\"16\"></line><line x1=\"20\" y1=\"12\" x2=\"20\" y2=\"3\"></line><line x1=\"1\" y1=\"14\" x2=\"7\" y2=\"14\"></line><line x1=\"9\" y1=\"8\" x2=\"15\" y2=\"8\"></line><line x1=\"17\" y1=\"16\" x2=\"23\" y2=\"16\"></line>", "description": "<path d=\"M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z\"></path><polyline points=\"14 2 14 8 20 8\"></polyline><line x1=\"16\" y1=\"13\" x2=\"8\" y2=\"13\"></line><line x1=\"16\" y1=\"17\" x2=\"8\" y2=\"17\"></line><polyline points=\"10 9 9 9 8 9\"></polyline>", "inventory_2": "<path d=\"M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z\"></path><polyline points=\"3.27 6.96 12 12.01 20.73 6.96\"></polyline><line x1=\"12\" y1=\"22.08\" x2=\"12\" y2=\"12\"></line>", "local_shipping": "<rect x=\"1\" y=\"3\" width=\"15\" height=\"13\"></rect><polygon points=\"16 8 20 8 23 11 23 16 16 16 16 8\"></polygon><circle cx=\"5.5\" cy=\"18.5\" r=\"2.5\"></circle><circle cx=\"18.5\" cy=\"18.5\" r=\"2.5\"></circle>", "warehouse": "<polyline points=\"21 8 21 21 3 21 3 8\"></polyline><rect x=\"1\" y=\"3\" width=\"22\" height=\"5\"></rect><line x1=\"10\" y1=\"12\" x2=\"14\" y2=\"12\"></line>", "groups": "<path d=\"M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2\"></path><circle cx=\"9\" cy=\"7\" r=\"4\"></circle><path d=\"M23 21v-2a4 4 0 0 0-3-3.87\"></path><path d=\"M16 3.13a4 4 0 0 1 0 7.75\"></path>", "dark_mode": "<path d=\"M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z\"></path>", "light_mode": "<circle cx=\"12\" cy=\"12\" r=\"5\"></circle><line x1=\"12\" y1=\"1\" x2=\"12\" y2=\"3\"></line><line x1=\"12\" y1=\"21\" x2=\"12\" y2=\"23\"></line><line x1=\"4.22\" y1=\"4.22\" x2=\"5.64\" y2=\"5.64\"></line><line x1=\"18.36\" y1=\"18.36\" x2=\"19.78\" y2=\"19.78\"></line><line x1=\"1\" y1=\"12\" x2=\"3\" y2=\"12\"></line><line x1=\"21\" y1=\"12\" x2=\"23\" y2=\"12\"></line><line x1=\"4.22\" y1=\"19.78\" x2=\"5.64\" y2=\"18.36\"></line><line x1=\"18.36\" y1=\"5.64\" x2=\"19.78\" y2=\"4.22\"></line>", "menu": "<line x1=\"3\" y1=\"12\" x2=\"21\" y2=\"12\"></line><line x1=\"3\" y1=\"6\" x2=\"21\" y2=\"6\"></line><line x1=\"3\" y1=\"18\" x2=\"21\" y2=\"18\"></line>", "close": "<line x1=\"18\" y1=\"6\" x2=\"6\" y2=\"18\"></line><line x1=\"6\" y1=\"6\" x2=\"18\" y2=\"18\"></line>", "check_circle": "<path d=\"M22 11.08V12a10 10 0 1 1-5.93-9.14\"></path><polyline points=\"22 4 12 14.01 9 11.01\"></polyline>", "warning": "<path d=\"M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z\"></path><line x1=\"12\" y1=\"9\" x2=\"12\" y2=\"13\"></line><line x1=\"12\" y1=\"17\" x2=\"12.01\" y2=\"17\"></line>", "error": "<circle cx=\"12\" cy=\"12\" r=\"10\"></circle><line x1=\"12\" y1=\"8\" x2=\"12\" y2=\"12\"></line><line x1=\"12\" y1=\"16\" x2=\"12.01\" y2=\"16\"></line>", "info": "<circle cx=\"12\" cy=\"12\" r=\"10\"></circle><line x1=\"12\" y1=\"16\" x2=\"12\" y2=\"12\"></line><line x1=\"12\" y1=\"8\" x2=\"12.01\" y2=\"8\"></line>", "schedule": "<circle cx=\"12\" cy=\"12\" r=\"10\"></circle><polyline points=\"12 6 12 12 16 14\"></polyline>", "trending_down": "<polyline points=\"23 18 13.5 8.5 8.5 13.5 1 6\"></polyline><polyline points=\"17 18 23 18 23 12\"></polyline>"};
+  IKON.content_copy = '<rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>';
+  const svg = (nama) => `<svg class="ikon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${IKON[nama] || IKON.info}</svg>`;
+  function pasangIkon(root) { root.querySelectorAll('[data-ikon]').forEach(el => { el.innerHTML = svg(el.dataset.ikon); }); }
+  pasangIkon(document);
+
   const $ = (id) => document.getElementById(id);
-  const fmt = (x, d = 0) => Number.isFinite(x) ? x.toLocaleString('id-ID', { minimumFractionDigits: d, maximumFractionDigits: d }) : '–';
-  const MONTHS = ['Oktober 2026', 'November 2026', 'Desember 2026'];
-  const STAGES = [
-    { name: 'Operasional sekarang', n: 1096 },
-    { name: 'Target Des 2026', n: 35000 },
-    { name: 'Target Des 2028', n: 80000 },
+  const angka = (x, d = 0) => Number.isFinite(x) ? x.toLocaleString('id-ID', { minimumFractionDigits: d, maximumFractionDigits: d }) : '—';
+  const BULAN = ['Oktober 2026', 'November 2026', 'Desember 2026'];
+  const TAHAP = [
+    { nama: 'Operasional sekarang', n: 1096 },
+    { nama: 'Target Des 2026', n: 35000 },
+    { nama: 'Target Des 2028', n: 80000 },
   ];
-  let shares = [100 / 3, 100 / 3, 100 / 3];
+  let porsi = [100 / 3, 100 / 3, 100 / 3];
 
-  function val(id, fallback) { const v = parseFloat($(id).value); return Number.isFinite(v) && v >= 0 ? v : fallback; }
-
-  function read() {
+  function nilai(id, cadangan) { const v = parseFloat($(id).value); return Number.isFinite(v) && v >= 0 ? v : cadangan; }
+  function baca() {
     return {
-      n: Math.max(1, Math.round(val('in-n', 1096))),
-      ton: val('in-ton', 0),
-      kg: Math.max(0.1, val('in-kg', 5)),
-      pop: val('in-pop', 0),
-      cons: val('in-cons', 0),
-      share: val('in-share', 0) / 100,
+      n: Math.max(1, Math.round(nilai('in-n', 1096))),
+      ton: nilai('in-ton', 0),
+      kg: Math.max(0.1, nilai('in-kg', 5)),
+      pop: nilai('in-pop', 0),
+      cons: nilai('in-cons', 0),
+      share: nilai('in-share', 0) / 100,
     };
   }
+  const butuhSakBulan = (s) => s.pop * s.cons * s.share / s.kg;
 
-  function needSakMonth(s) { return s.pop * s.cons * s.share / s.kg; } // sak per KDKMP per bulan
-  function status(ratio) {
-    if (!Number.isFinite(ratio)) return { cls: 'warn', label: 'Isi asumsi' };
-    if (ratio < 0.95) return { cls: 'bad', label: 'Defisit' };
-    if (ratio <= 1.5) return { cls: 'good', label: 'Cukup' };
-    return { cls: 'warn', label: 'Berlebih' };
+  // Defisit = merah; berlebih = kuning karena butuh keputusan (gudang, penjualan), bukan galat.
+  function status(r) {
+    if (!Number.isFinite(r)) return { nada: 'netral', label: 'Isi asumsi', ikon: 'info' };
+    if (r < 0.95) return { nada: 'crit', label: 'Defisit', ikon: 'error' };
+    if (r <= 1.5) return { nada: 'ok', label: 'Cukup', ikon: 'check_circle' };
+    return { nada: 'warn', label: 'Berlebih', ikon: 'warning' };
   }
+  const lencana = (st) => `<span class="lencana ${st.nada}">${svg(st.ikon)}${st.label}</span>`;
 
   function render() {
-    const s = read();
+    const s = baca();
     const totalSak = s.ton * 1000 / s.kg;
     const per3 = totalSak / s.n;
-    const perMonth = per3 / 3;
-    const need = needSakMonth(s);
-    const ratio = need > 0 ? perMonth / need : NaN;
-    const st = status(ratio);
+    const perBulan = per3 / 3;
+    const butuh = butuhSakBulan(s);
+    const rasio = butuh > 0 ? perBulan / butuh : NaN;
+    const st = status(rasio);
 
     document.querySelectorAll('.chip').forEach(c => c.setAttribute('aria-pressed', String(+c.dataset.n === s.n)));
-    $('ans-n').textContent = fmt(s.n);
-    $('ans-total').textContent = `${fmt(s.ton)} ton = ${fmt(totalSak)} sak @ ${fmt(s.kg, s.kg % 1 ? 1 : 0)} kg`;
-    $('big-month').innerHTML = `${fmt(perMonth)}<small>sak</small>`;
-    $('f-3m').textContent = `${fmt(per3)} sak`;
-    $('f-ton').textContent = `${fmt(perMonth * s.kg / 1000, 1)} ton`;
-    $('f-day').textContent = `${fmt(perMonth / 30)} sak`;
-    $('f-truck').textContent = `${fmt(perMonth * s.kg / 8000, 1)} truk`;
+    $('bar-n').textContent = `${angka(s.n)} KDKMP`;
+    $('s-bulan').innerHTML = `${angka(perBulan)}<small>sak</small>`;
+    $('s-3bln').innerHTML = `${angka(per3)}<small>sak</small>`;
+    $('s-3bln-c').textContent = `dari ${angka(totalSak)} sak total`;
+    $('s-ton').innerHTML = `${angka(perBulan * s.kg / 1000, 1)}<small>ton</small>`;
+    $('s-hari').textContent = `± ${angka(perBulan / 30)} sak per hari`;
+    $('s-truk').innerHTML = `${angka(perBulan * s.kg / 8000, 1)}<small>truk</small>`;
 
-    let msg;
-    if (st.label === 'Defisit') msg = `Tiap KDKMP dapat ${fmt(perMonth)} sak per bulan, kebutuhan desanya sekitar ${fmt(need)} sak. Kurang ${fmt(need - perMonth)} sak per KDKMP per bulan (${fmt((1 - ratio) * 100)}% di bawah kebutuhan).`;
-    else if (st.label === 'Cukup') msg = `Tiap KDKMP dapat ${fmt(perMonth)} sak per bulan, kebutuhan desanya sekitar ${fmt(need)} sak. Pasokan menutup kebutuhan (${fmt(ratio * 100)}%).`;
-    else if (st.label === 'Berlebih') msg = `Tiap KDKMP dapat ${fmt(perMonth)} sak per bulan, padahal kebutuhan desanya sekitar ${fmt(need)} sak, jadi ${fmt(ratio, 1)} kali lipat. Stok tidak defisit, tapi koperasi berisiko kewalahan menyimpan dan menjual. Perlu cek kapasitas gudang tiap KDKMP.`;
-    else msg = 'Isi asumsi penduduk, konsumsi, dan porsi SPHP untuk melihat status.';
-    $('verdict').innerHTML = `<span class="pill ${st.cls}">${st.label}</span><p>${msg}</p><p class="note">Status: defisit bila pasokan &lt; 95% kebutuhan; berlebih bila &gt; 150%.</p>`;
+    let pesan;
+    if (st.label === 'Defisit') pesan = `Tiap KDKMP dapat <strong>${angka(perBulan)} sak</strong> per bulan, kebutuhan desanya sekitar <strong>${angka(butuh)} sak</strong>. Kurang ${angka(butuh - perBulan)} sak per KDKMP per bulan (${angka((1 - rasio) * 100)}% di bawah kebutuhan).`;
+    else if (st.label === 'Cukup') pesan = `Tiap KDKMP dapat <strong>${angka(perBulan)} sak</strong> per bulan, kebutuhan desanya sekitar <strong>${angka(butuh)} sak</strong>. Pasokan menutup kebutuhan (${angka(rasio * 100)}%).`;
+    else if (st.label === 'Berlebih') pesan = `Tiap KDKMP dapat <strong>${angka(perBulan)} sak</strong> per bulan, padahal kebutuhan desanya sekitar <strong>${angka(butuh)} sak</strong>, jadi ${angka(rasio, 1)} kali lipat. Stok tidak defisit, tapi koperasi berisiko kewalahan menyimpan dan menjual. Perlu cek kapasitas gudang tiap KDKMP.`;
+    else pesan = 'Isi asumsi penduduk, konsumsi, dan porsi SPHP di bagian Angka dasar untuk melihat status.';
+    const v = $('vonis');
+    v.className = `catatan ${st.nada === 'netral' ? 'aksen' : st.nada}`;
+    v.innerHTML = `${svg(st.ikon)}<div class="catatan-isi"><div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px"><strong>Status ${angka(s.n)} KDKMP</strong>${lencana(st)}</div><p>${pesan}</p><p class="catatan-kecil" style="margin:0">Defisit bila pasokan di bawah 95% kebutuhan; berlebih bila di atas 150%.</p></div>`;
 
-    // Per month table
-    const shareSum = shares.reduce((a, b) => a + b, 0) || 1;
-    let rows = '', tTon = 0, tSak = 0, tPer = 0, tRest = 0;
-    MONTHS.forEach((m, i) => {
-      const p = shares[i] / shareSum;
+    // Tabel per bulan
+    const jumlahPorsi = porsi.reduce((a, b) => a + b, 0) || 1;
+    let baris = '', tTon = 0, tSak = 0, tPer = 0, tSisa = 0;
+    BULAN.forEach((m, i) => {
+      const p = porsi[i] / jumlahPorsi;
       const sak = Math.floor(totalSak * p);
       const per = Math.floor(sak / s.n);
-      const rest = sak - per * s.n;
-      tTon += s.ton * p; tSak += sak; tPer += per; tRest += rest;
-      rows += `<tr><td class="txt">${m}</td><td><input class="share" id="share-${i}" type="number" min="0" step="1" value="${+shares[i].toFixed(1)}" aria-label="Porsi ${m} (%)"> %</td><td>${fmt(s.ton * p)}</td><td>${fmt(sak)}</td><td><b>${fmt(per)}</b></td><td>${fmt(per * s.kg)}</td><td>${fmt(rest)}</td></tr>`;
+      const sisa = sak - per * s.n;
+      tTon += s.ton * p; tSak += sak; tPer += per; tSisa += sisa;
+      baris += `<tr><td class="kuat">${m}</td><td><input class="isian-kecil" id="porsi-${i}" type="number" min="0" step="1" value="${+porsi[i].toFixed(1)}" aria-label="Porsi ${m} dalam persen"> %</td><td>${angka(s.ton * p)}</td><td>${angka(sak)}</td><td><b>${angka(per)}</b></td><td>${angka(per * s.kg)}</td><td>${angka(sisa)}</td></tr>`;
     });
-    const active = document.activeElement && document.activeElement.id;
-    $('tb-month').innerHTML = rows;
-    $('tf-month').innerHTML = `<tr><td class="txt">Total 3 bulan</td><td>${fmt(shareSum, 1)} %</td><td>${fmt(tTon)}</td><td>${fmt(tSak)}</td><td>${fmt(tPer)}</td><td>${fmt(tPer * s.kg)}</td><td>${fmt(tRest)}</td></tr>`;
-    MONTHS.forEach((_, i) => {
-      const el = $('share-' + i);
-      el.addEventListener('change', () => { shares[i] = Math.max(0, parseFloat(el.value) || 0); render(); });
+    const aktif = document.activeElement && document.activeElement.id;
+    $('tb-bulan').innerHTML = baris;
+    $('tf-bulan').innerHTML = `<tr><td>Total 3 bulan</td><td>${angka(jumlahPorsi, 1)} %</td><td>${angka(tTon)}</td><td>${angka(tSak)}</td><td>${angka(tPer)}</td><td>${angka(tPer * s.kg)}</td><td>${angka(tSisa)}</td></tr>`;
+    BULAN.forEach((_, i) => {
+      const el = $('porsi-' + i);
+      el.addEventListener('change', () => { porsi[i] = Math.max(0, parseFloat(el.value) || 0); render(); });
     });
-    if (active && active.startsWith('share-')) $(active)?.focus();
+    if (aktif && aktif.startsWith('porsi-')) $(aktif)?.focus();
 
-    // Stage tables
-    const stageData = STAGES.map(g => {
+    // Per tahap
+    const data = TAHAP.map(g => {
       const pm = totalSak / g.n / 3;
-      const need3Ton = g.n * need * 3 * s.kg / 1000;
-      return { ...g, pm, need3Ton, ratio: need > 0 ? pm / need : NaN };
+      const butuh3Ton = g.n * butuh * 3 * s.kg / 1000;
+      return { ...g, pm, butuh3Ton, rasio: butuh > 0 ? pm / butuh : NaN };
     });
-    $('tb-stage').innerHTML = stageData.map(g => {
-      const t = status(g.ratio);
-      return `<tr class="${g.n === s.n ? 'sel' : ''}"><td class="txt">${g.name}</td><td>${fmt(g.n)}</td><td>${fmt(g.pm)}</td><td>${fmt(need)}</td><td class="txt"><span class="pill ${t.cls}">${t.label}</span></td></tr>`;
-    }).join('');
-    $('tb-year').innerHTML = stageData.map(g => {
-      const diff = s.ton - g.need3Ton;
-      const yearNeed = g.need3Ton * 4;
-      const yearStock = s.ton * 4;
-      const short = Math.max(0, yearNeed - yearStock);
-      return `<tr class="${g.n === s.n ? 'sel' : ''}"><td class="txt">${g.name} (${fmt(g.n)})</td><td>${fmt(g.need3Ton)}</td><td style="color:var(${diff < 0 ? '--bad' : '--good'})">${diff < 0 ? '−' : '+'}${fmt(Math.abs(diff))}</td><td>${fmt(yearNeed)}</td><td>${fmt(yearStock)}</td><td>${short > 0 ? fmt(short) : '0'}</td></tr>`;
+    $('rekap').innerHTML = `
+      <div><div class="eyebrow">Stok SPHP</div><div class="v">${angka(s.ton)} ton</div></div>
+      <div><div class="eyebrow">Total kemasan</div><div class="v">${angka(totalSak)} sak</div></div>
+      <div><div class="eyebrow">Kebutuhan per desa</div><div class="v">${angka(butuh)} sak/bln</div></div>`;
+    $('tb-tahap').innerHTML = data.map(g => `<tr class="${g.n === s.n ? 'terpilih' : ''}"><td class="kuat">${g.nama}<div class="catatan-kecil">${angka(g.n)} KDKMP</div></td><td>${angka(g.pm)}</td><td>${angka(butuh)}</td><td style="text-align:left">${lencana(status(g.rasio))}</td></tr>`).join('');
+    $('tb-tahun').innerHTML = data.map(g => {
+      const selisih = s.ton - g.butuh3Ton;
+      const tahunButuh = g.butuh3Ton * 4, tahunStok = s.ton * 4;
+      const kurang = Math.max(0, tahunButuh - tahunStok);
+      return `<tr class="${g.n === s.n ? 'terpilih' : ''}"><td class="kuat">${g.nama} (${angka(g.n)})</td><td>${angka(g.butuh3Ton)}</td><td style="color:var(${selisih < 0 ? '--crit' : '--ok'});font-weight:600">${selisih < 0 ? '−' : '+'}${angka(Math.abs(selisih))}</td><td>${angka(tahunButuh)}</td><td>${angka(tahunStok)}</td><td${kurang > 0 ? ' style="color:var(--crit);font-weight:600"' : ''}>${angka(kurang)}</td></tr>`;
     }).join('');
 
-    drawChart(stageData, s.ton);
-    writeSummary(s, totalSak, perMonth, per3, need, st, stageData);
+    gambarGrafik(data, s.ton);
+    tulisRingkasan(s, totalSak, per3, butuh, st, data);
   }
 
-  function niceStep(v) {
+  function langkahRapi(v) {
     const p = Math.pow(10, Math.floor(Math.log10(v)));
     for (const m of [1, 2, 2.5, 5, 10]) if (m * p >= v) return m * p;
     return 10 * p;
   }
+  function singkat(v) {
+    if (v >= 1e6) return angka(v / 1e6, v % 1e6 ? 2 : 0).replace(/,?0+$/, '') + ' jt';
+    if (v >= 1e3) return angka(v / 1e3, 0) + ' rb';
+    return angka(v);
+  }
 
-  function drawChart(data, stock) {
-    const W = 640, L = 150, R = 24, T = 26, rowH = 46, B = 30;
-    const H = T + rowH * data.length + B;
-    const top = Math.max(1, stock, ...data.map(d => d.need3Ton));
-    const step = niceStep(top / 4);
-    const max = Math.ceil(top * 1.02 / step) * step;
-    const x = v => L + (v / max) * (W - L - R);
-    const ticks = []; for (let t = 0; t <= max + 1e-9; t += step) ticks.push(t);
-    let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Kebutuhan beras 3 bulan per tahap dibanding stok SPHP">`;
-    ticks.forEach(t => {
-      svg += `<line class="grid" x1="${x(t)}" x2="${x(t)}" y1="${T - 6}" y2="${H - B}"></line>`;
-      svg += `<text x="${x(t)}" y="${H - B + 16}" text-anchor="middle">${fmtShort(t)}</text>`;
-    });
+  function gambarGrafik(data, stok) {
+    const W = 600, L = 150, R = 28, T = 30, tinggiBaris = 50, B = 30;
+    const H = T + tinggiBaris * data.length + B;
+    const puncak = Math.max(1, stok, ...data.map(d => d.butuh3Ton));
+    const langkah = langkahRapi(puncak / 4);
+    const maks = Math.ceil(puncak * 1.02 / langkah) * langkah;
+    const x = v => L + (v / maks) * (W - L - R);
+    let g = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Kebutuhan beras 3 bulan per tahap dibanding stok SPHP">`;
+    for (let t = 0; t <= maks + 1e-9; t += langkah) {
+      g += `<line class="kisi" x1="${x(t)}" x2="${x(t)}" y1="${T - 6}" y2="${H - B}"></line>`;
+      g += `<text class="sub" x="${x(t)}" y="${H - B + 17}" text-anchor="middle">${singkat(t)}</text>`;
+    }
     data.forEach((d, i) => {
-      const y = T + i * rowH + 8, h = rowH - 20;
-      const w = Math.max(2, x(d.need3Ton) - L);
-      const over = d.need3Ton > stock;
-      svg += `<text x="${L - 10}" y="${y + h / 2 - 3}" text-anchor="end">${d.name}</text>`;
-      svg += `<text x="${L - 10}" y="${y + h / 2 + 12}" text-anchor="end" style="fill:var(--fg-3);font-size:11px">${fmt(d.n)} KDKMP</text>`;
-      svg += `<path class="bar ${over ? 'over' : ''}" d="M${L},${y} H${L + w - 4} a4,4 0 0 1 4,4 V${y + h - 4} a4,4 0 0 1 -4,4 H${L} Z"></path>`;
-      const lx = L + w + 6, fits = lx + 70 < W;
-      svg += `<text class="val" x="${fits ? lx : L + w - 6}" y="${y + h / 2 + 4}" text-anchor="${fits ? 'start' : 'end'}" ${fits ? '' : 'style="fill:var(--surface)"'}>${fmtShort(d.need3Ton)} t</text>`;
-      svg += `<rect class="hit" x="0" y="${y - 6}" width="${W}" height="${h + 12}" data-i="${i}"></rect>`;
+      const y = T + i * tinggiBaris + 9, h = tinggiBaris - 22;
+      const w = Math.max(3, x(d.butuh3Ton) - L);
+      const lebih = d.butuh3Ton > stok;
+      g += `<text x="${L - 12}" y="${y + h / 2 - 2}" text-anchor="end">${d.nama}</text>`;
+      g += `<text class="sub" x="${L - 12}" y="${y + h / 2 + 13}" text-anchor="end">${angka(d.n)} KDKMP</text>`;
+      g += `<path class="batang ${lebih ? 'lebih' : ''}" d="M${L},${y} H${L + w - 4} a4,4 0 0 1 4,4 V${y + h - 4} a4,4 0 0 1 -4,4 H${L} Z"></path>`;
+      const lx = L + w + 8, muat = lx + 70 < W;
+      g += `<text class="angka" x="${muat ? lx : L + w - 8}" y="${y + h / 2 + 4}" text-anchor="${muat ? 'start' : 'end'}"${muat ? '' : ' style="fill:var(--surface)"'}>${singkat(d.butuh3Ton)} ton</text>`;
+      g += `<rect class="sasaran" x="0" y="${y - 7}" width="${W}" height="${h + 14}" data-i="${i}"></rect>`;
     });
-    svg += `<line class="ref" x1="${x(stock)}" x2="${x(stock)}" y1="${T - 10}" y2="${H - B}"></line>`;
-    svg += `<text class="reflabel" x="${x(stock)}" y="${T - 14}" text-anchor="${x(stock) > W - 90 ? 'end' : 'middle'}">Stok ${fmtShort(stock)} t</text>`;
-    svg += `</svg><div class="tip" id="tip" hidden></div>`;
-    const box = $('chart');
-    box.innerHTML = svg;
+    g += `<line class="stok" x1="${x(stok)}" x2="${x(stok)}" y1="${T - 12}" y2="${H - B}"></line>`;
+    g += `<text class="stok-label" x="${x(stok)}" y="${T - 16}" text-anchor="${x(stok) > W - 90 ? 'end' : 'middle'}">Stok ${singkat(stok)} ton</text>`;
+    g += `</svg><div class="tip" id="tip" hidden></div>`;
+    const kotak = $('grafik');
+    kotak.innerHTML = g;
     const tip = $('tip');
-    box.querySelectorAll('.hit').forEach(r => {
+    kotak.querySelectorAll('.sasaran').forEach(r => {
       r.addEventListener('mousemove', e => {
         const d = data[+r.dataset.i];
-        const diff = stock - d.need3Ton;
-        tip.innerHTML = `<b>${d.name}</b> · ${fmt(d.n)} KDKMP<br>Butuh 3 bulan: ${fmt(d.need3Ton)} ton<br>Stok: ${fmt(stock)} ton<br>${diff >= 0 ? 'Sisa' : 'Kurang'}: ${fmt(Math.abs(diff))} ton`;
+        const selisih = stok - d.butuh3Ton;
+        tip.innerHTML = `<b>${d.nama}</b> · ${angka(d.n)} KDKMP<br>Butuh 3 bulan: ${angka(d.butuh3Ton)} ton<br>Stok: ${angka(stok)} ton<br>${selisih >= 0 ? 'Sisa' : 'Kurang'}: <b>${angka(Math.abs(selisih))} ton</b>`;
         tip.hidden = false;
-        const b = box.getBoundingClientRect();
-        let left = e.clientX - b.left + 12;
-        if (left + 240 > b.width) left = e.clientX - b.left - 250;
-        tip.style.left = Math.max(0, left) + 'px';
-        tip.style.top = (e.clientY - b.top + 12) + 'px';
+        const b = kotak.getBoundingClientRect();
+        let kiri = e.clientX - b.left + 14;
+        if (kiri + 250 > b.width) kiri = e.clientX - b.left - 260;
+        tip.style.left = Math.max(0, kiri) + 'px';
+        tip.style.top = (e.clientY - b.top + 14) + 'px';
       });
       r.addEventListener('mouseleave', () => { tip.hidden = true; });
     });
   }
 
-  function fmtShort(v) {
-    if (v >= 1e6) return fmt(v / 1e6, v % 1e6 ? 2 : 0).replace(/,00$/, '') + ' jt';
-    if (v >= 1e3) return fmt(v / 1e3, 0) + ' rb';
-    return fmt(v);
+  function tulisRingkasan(s, totalSak, per3, butuh, st, data) {
+    const jumlahPorsi = porsi.reduce((a, b) => a + b, 0) || 1;
+    const L = [];
+    L.push('ALOKASI BERAS SPHP KE KDKMP, OKT–DES 2026');
+    L.push(`Stok: ${angka(s.ton)} ton, kemasan ${angka(s.kg, s.kg % 1 ? 1 : 0)} kg = ${angka(totalSak)} sak.`);
+    L.push(`Penerima: ${angka(s.n)} KDKMP.`);
+    L.push('');
+    L.push('Per KDKMP:');
+    BULAN.forEach((m, i) => {
+      const per = Math.floor(Math.floor(totalSak * porsi[i] / jumlahPorsi) / s.n);
+      L.push(`- ${m}: ${angka(per)} sak (${angka(per * s.kg / 1000, 1)} ton)`);
+    });
+    L.push(`- Total 3 bulan: ± ${angka(per3)} sak`);
+    L.push('');
+    L.push(`Kebutuhan per desa (asumsi ${angka(s.pop)} jiwa × ${angka(s.cons, 1)} kg × ${angka(s.share * 100)}%): ± ${angka(butuh)} sak/bulan.`);
+    L.push(`Status ${angka(s.n)} KDKMP: ${st.label.toUpperCase()}.`);
+    L.push('');
+    L.push(`Per tahap (stok ${angka(s.ton)} ton per 3 bulan):`);
+    data.forEach(g => {
+      const selisih = s.ton - g.butuh3Ton;
+      L.push(`- ${g.nama}, ${angka(g.n)} KDKMP: dapat ${angka(g.pm)} sak/bln per KDKMP; butuh ${angka(g.butuh3Ton)} ton/3 bln; ${selisih >= 0 ? 'sisa' : 'kurang'} ${angka(Math.abs(selisih))} ton (${status(g.rasio).label.toLowerCase()}).`);
+    });
+    $('ringkasan-teks').textContent = L.join('\n');
   }
 
-  function writeSummary(s, totalSak, perMonth, per3, need, st, stageData) {
-    const shareSum = shares.reduce((a, b) => a + b, 0) || 1;
-    const lines = [];
-    lines.push(`ALOKASI BERAS SPHP KE KDKMP, OKT–DES 2026`);
-    lines.push(`Stok: ${fmt(s.ton)} ton, kemasan ${fmt(s.kg, s.kg % 1 ? 1 : 0)} kg = ${fmt(totalSak)} sak.`);
-    lines.push(`Penerima: ${fmt(s.n)} KDKMP.`);
-    lines.push('');
-    lines.push(`Per KDKMP:`);
-    MONTHS.forEach((m, i) => {
-      const per = Math.floor(Math.floor(totalSak * shares[i] / shareSum) / s.n);
-      lines.push(`- ${m}: ${fmt(per)} sak (${fmt(per * s.kg / 1000, 1)} ton)`);
-    });
-    lines.push(`- Total 3 bulan: ± ${fmt(per3)} sak`);
-    lines.push('');
-    lines.push(`Kebutuhan per desa (asumsi ${fmt(s.pop)} jiwa × ${fmt(s.cons, 1)} kg × ${fmt(s.share * 100)}%): ± ${fmt(need)} sak/bulan.`);
-    lines.push(`Status ${fmt(s.n)} KDKMP: ${st.label.toUpperCase()}.`);
-    lines.push('');
-    lines.push(`Per tahap (stok ${fmt(s.ton)} ton per 3 bulan):`);
-    stageData.forEach(g => {
-      const diff = s.ton - g.need3Ton;
-      lines.push(`- ${g.name}, ${fmt(g.n)} KDKMP: dapat ${fmt(g.pm)} sak/bln per KDKMP; butuh ${fmt(g.need3Ton)} ton/3 bln; ${diff >= 0 ? 'sisa' : 'kurang'} ${fmt(Math.abs(diff))} ton (${status(g.ratio).label.toLowerCase()}).`);
-    });
-    $('summary').textContent = lines.join('\n');
-  }
-
+  // Interaksi
   document.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => { $('in-n').value = c.dataset.n; render(); }));
   ['in-n', 'in-ton', 'in-kg', 'in-pop', 'in-cons', 'in-share'].forEach(id => $(id).addEventListener('input', render));
-  $('copy').addEventListener('click', () => {
-    const text = $('summary').textContent, btn = $('copy');
-    const done = () => { btn.textContent = 'Tersalin'; setTimeout(() => btn.textContent = 'Salin teks', 1500); };
-    const fallback = () => { const r = document.createRange(); r.selectNodeContents($('summary')); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); btn.textContent = 'Teks terpilih, tekan Ctrl+C'; };
-    try { navigator.clipboard.writeText(text).then(done, fallback); } catch (e) { fallback(); }
+
+  function salin() {
+    const teks = $('ringkasan-teks').textContent, label = $('salin-label');
+    const selesai = () => { label.textContent = 'Tersalin'; setTimeout(() => label.textContent = 'Salin teks', 1600); };
+    const cadangan = () => { const r = document.createRange(); r.selectNodeContents($('ringkasan-teks')); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); label.textContent = 'Teks terpilih, tekan Ctrl+C'; };
+    try { navigator.clipboard.writeText(teks).then(selesai, cadangan); } catch (e) { cadangan(); }
+  }
+  $('salin').addEventListener('click', salin);
+  $('salin-atas').addEventListener('click', () => { salin(); $('rapat').scrollIntoView(); });
+
+  // Laci menu di layar sempit
+  const laci = $('menu-utama'), tirai = $('tirai'), buka = $('buka-menu');
+  function aturLaci(terbuka) {
+    laci.classList.toggle('buka', terbuka);
+    tirai.hidden = !terbuka;
+    buka.setAttribute('aria-expanded', String(terbuka));
+    if (terbuka) $('tutup-menu').focus(); else if (document.activeElement && laci.contains(document.activeElement)) buka.focus();
+  }
+  buka.addEventListener('click', () => aturLaci(true));
+  $('tutup-menu').addEventListener('click', () => aturLaci(false));
+  tirai.addEventListener('click', () => aturLaci(false));
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && laci.classList.contains('buka')) aturLaci(false); });
+
+  // Menu aktif mengikuti bagian yang sedang terlihat
+  const menu = [...document.querySelectorAll('.menu')];
+  function tandai(id) { menu.forEach(a => a.toggleAttribute('aria-current', a.getAttribute('href') === '#' + id)); menu.forEach(a => { if (a.hasAttribute('aria-current')) a.setAttribute('aria-current', 'true'); }); }
+  menu.forEach(a => a.addEventListener('click', () => { tandai(a.getAttribute('href').slice(1)); if (window.innerWidth < 1024) aturLaci(false); }));
+  if ('IntersectionObserver' in window) {
+    const io = new IntersectionObserver(es => { es.forEach(e => { if (e.isIntersecting) tandai(e.target.id); }); }, { rootMargin: '-30% 0px -60% 0px' });
+    ['ringkasan', 'bulanan', 'tahap', 'asumsi', 'rapat'].forEach(id => io.observe($(id)));
+  }
+
+  // Tema: pilihan manual mengalahkan setelan sistem di kedua arah
+  const akar = document.documentElement;
+  const gelapSekarang = () => akar.dataset.theme ? akar.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+  const ikonTema = () => { $('ikon-tema').innerHTML = svg(gelapSekarang() ? 'light_mode' : 'dark_mode'); };
+  try { const t = localStorage.getItem('tema'); if (t === 'dark' || t === 'light') akar.dataset.theme = t; } catch (e) {}
+  ikonTema();
+  $('tema').addEventListener('click', () => {
+    const baru = gelapSekarang() ? 'light' : 'dark';
+    akar.dataset.theme = baru;
+    try { localStorage.setItem('tema', baru); } catch (e) {}
+    ikonTema();
   });
+
   render();
 })();
 </script>
