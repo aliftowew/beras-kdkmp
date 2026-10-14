@@ -283,9 +283,9 @@ tfoot td { border-top: 1px solid var(--line-strong); font-weight: 600; color: va
 
         <div class="bilah" role="group" aria-label="Pilih jumlah KDKMP">
           <span class="eyebrow">Jumlah KDKMP</span>
-          <button class="chip" type="button" data-n="1096">1.096 <small>operasional</small></button>
-          <button class="chip" type="button" data-n="35000">35.000 <small>target Des 2026</small></button>
-          <button class="chip" type="button" data-n="80000">80.000 <small>target Des 2028</small></button>
+          <button class="chip" type="button" data-n="1096">1.096 <small>saat ini</small></button>
+          <button class="chip" type="button" data-n="17000">17.000 <small>Desember 2026</small></button>
+          <button class="chip" type="button" data-n="35000">35.000 <small>2027</small></button>
         </div>
 
         <div class="statistik-grid">
@@ -412,9 +412,9 @@ tfoot td { border-top: 1px solid var(--line-strong); font-weight: 600; color: va
   const angka = (x, d = 0) => Number.isFinite(x) ? x.toLocaleString('id-ID', { minimumFractionDigits: d, maximumFractionDigits: d }) : '—';
   const BULAN = ['Oktober 2026', 'November 2026', 'Desember 2026'];
   const TAHAP = [
-    { nama: 'Operasional sekarang', n: 1096 },
-    { nama: 'Target Des 2026', n: 35000 },
-    { nama: 'Target Des 2028', n: 80000 },
+    { nama: 'Saat ini', n: 1096 },
+    { nama: 'Desember 2026', n: 17000 },
+    { nama: '2027', n: 35000 },
   ];
   let porsi = [100 / 3, 100 / 3, 100 / 3];
 
