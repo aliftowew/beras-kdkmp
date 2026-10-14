@@ -210,7 +210,13 @@ tfoot td { border-top: 1px solid var(--line-strong); font-weight: 600; color: va
 .grafik .batang { fill: var(--accent); }
 .grafik .batang.lebih { fill: var(--crit); }
 .grafik .stok { stroke: var(--ink-2); stroke-width: 2; stroke-dasharray: 5 4; }
-.grafik .stok-label { fill: var(--ink); font-weight: 700; font-size: 11.5px; }
+.daftar-grafik { display: none; list-style: none; margin: 12px 0 0; padding: 0; font-size: 0.85rem; color: var(--ink-2); }
+.daftar-grafik li { padding: 8px 0; border-top: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+.daftar-grafik b { color: var(--ink); }
+@media (max-width: 640px) { .daftar-grafik { display: block; } }
+.grafik .selisih { font-size: 11.5px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.grafik .halo { paint-order: stroke; stroke: var(--surface); stroke-width: 4px; stroke-linejoin: round; }
+.grafik .stok-label { paint-order: stroke; stroke: var(--surface); stroke-width: 4px; stroke-linejoin: round;  fill: var(--ink); font-weight: 700; font-size: 11.5px; }
 .grafik .sasaran { fill: transparent; }
 .tip { position: absolute; pointer-events: none; z-index: 5; background: var(--surface); color: var(--ink-2); border: 1px solid var(--line-strong); box-shadow: var(--bayang-naik); font-size: 0.8rem; padding: 10px 12px; border-radius: 12px; max-width: 260px; line-height: 1.45; }
 .tip b { color: var(--ink); }
@@ -509,7 +515,7 @@ tfoot td { border-top: 1px solid var(--line-strong); font-weight: 600; color: va
       return `<tr class="${g.n === s.n ? 'terpilih' : ''}"><td class="kuat">${g.nama} (${angka(g.n)})</td><td>${angka(g.butuh3Ton)}</td><td style="color:var(${selisih < 0 ? '--crit' : '--ok'});font-weight:600">${selisih < 0 ? '−' : '+'}${angka(Math.abs(selisih))}</td><td>${angka(tahunButuh)}</td><td>${angka(tahunStok)}</td><td${kurang > 0 ? ' style="color:var(--crit);font-weight:600"' : ''}>${angka(kurang)}</td></tr>`;
     }).join('');
 
-    gambarGrafik(data, s.tonKdkmp);
+    gambarGrafik(data, s.tonKdkmp, s.kg);
     tulisRingkasan(s, totalSak, per3, butuh, st, data);
   }
 
@@ -519,37 +525,52 @@ tfoot td { border-top: 1px solid var(--line-strong); font-weight: 600; color: va
     return 10 * p;
   }
   function singkat(v) {
-    if (v >= 1e6) return angka(v / 1e6, v % 1e6 ? 2 : 0).replace(/,?0+$/, '') + ' jt';
+    // Buang nol di belakang koma saja; "10 jt" tidak boleh jadi "1 jt".
+    if (v >= 1e6) return angka(v / 1e6, 2).replace(/(,\d*?)0+$/, '$1').replace(/,$/, '') + ' jt';
     if (v >= 1e3) return angka(v / 1e3, 0) + ' rb';
     return angka(v);
   }
 
-  function gambarGrafik(data, stok) {
-    const W = 600, L = 150, R = 28, T = 30, tinggiBaris = 50, B = 30;
+  function gambarGrafik(data, stok, kg) {
+    const sak = ton => ton * 1000 / kg;
+    const W = 680, L = 150, R = 16, T = 30, tinggiBaris = 66, B = 30;
     const H = T + tinggiBaris * data.length + B;
     const puncak = Math.max(1, stok, ...data.map(d => d.butuh3Ton));
     const langkah = langkahRapi(puncak / 4);
     const maks = Math.ceil(puncak * 1.02 / langkah) * langkah;
     const x = v => L + (v / maks) * (W - L - R);
-    let g = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Kebutuhan beras 3 bulan per tahap dibanding stok SPHP">`;
+    let g = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Kebutuhan beras 3 bulan per tahap dibanding jatah KDKMP, dalam ton dan sak">`;
     for (let t = 0; t <= maks + 1e-9; t += langkah) {
       g += `<line class="kisi" x1="${x(t)}" x2="${x(t)}" y1="${T - 6}" y2="${H - B}"></line>`;
       g += `<text class="sub" x="${x(t)}" y="${H - B + 17}" text-anchor="middle">${singkat(t)}</text>`;
     }
     data.forEach((d, i) => {
-      const y = T + i * tinggiBaris + 9, h = tinggiBaris - 22;
+      const y = T + i * tinggiBaris + 8, h = 26;
       const w = Math.max(3, x(d.butuh3Ton) - L);
-      const lebih = d.butuh3Ton > stok;
-      g += `<text x="${L - 12}" y="${y + h / 2 - 2}" text-anchor="end">${d.nama}</text>`;
-      g += `<text class="sub" x="${L - 12}" y="${y + h / 2 + 13}" text-anchor="end">${angka(d.n)} KDKMP</text>`;
+      const defisit = d.butuh3Ton - stok;
+      const lebih = defisit > 0;
+      const baris1 = `${singkat(d.butuh3Ton)} ton (${singkat(sak(d.butuh3Ton))} sak)`;
+      const baris2 = lebih ? `Defisit ${singkat(defisit)} ton (${singkat(sak(defisit))} sak)` : `Sisa ${singkat(-defisit)} ton (${singkat(sak(-defisit))} sak)`;
+      g += `<text x="${L - 12}" y="${y + h / 2 - 1}" text-anchor="end">${d.nama}</text>`;
+      g += `<text class="sub" x="${L - 12}" y="${y + h / 2 + 14}" text-anchor="end">${angka(d.n)} KDKMP</text>`;
       g += `<path class="batang ${lebih ? 'lebih' : ''}" d="M${L},${y} H${L + w - 4} a4,4 0 0 1 4,4 V${y + h - 4} a4,4 0 0 1 -4,4 H${L} Z"></path>`;
-      const lx = L + w + 8, muat = lx + 70 < W;
-      g += `<text class="angka" x="${muat ? lx : L + w - 8}" y="${y + h / 2 + 4}" text-anchor="${muat ? 'start' : 'end'}"${muat ? '' : ' style="fill:var(--surface)"'}>${singkat(d.butuh3Ton)} ton</text>`;
-      g += `<rect class="sasaran" x="0" y="${y - 7}" width="${W}" height="${h + 14}" data-i="${i}"></rect>`;
+      // Label di kanan batang bila muat; kalau tidak, di dalam batang dengan teks terang.
+      const lx = L + w + 8, muat = lx + baris1.length * 6.9 < W;
+      const ax = muat ? lx : L + w - 8, anchor = muat ? 'start' : 'end';
+      g += `<text class="angka ${muat ? 'halo' : ''}" x="${ax}" y="${y + h / 2 + 4}" text-anchor="${anchor}"${muat ? '' : ' style="fill:var(--surface)"'}>${baris1}</text>`;
+      // Baris defisit/sisa di bawah batang, rata kanan dengan ujung batang supaya tidak bertabrakan.
+      const bx = Math.max(L + baris2.length * 6.6, L + w);
+      g += `<text class="selisih halo" x="${Math.min(bx, W - 2)}" y="${y + h + 15}" text-anchor="end" style="fill:var(${lebih ? '--crit' : '--ok'})">${baris2}</text>`;
+      g += `<rect class="sasaran" x="0" y="${y - 6}" width="${W}" height="${h + 26}" data-i="${i}"></rect>`;
     });
     g += `<line class="stok" x1="${x(stok)}" x2="${x(stok)}" y1="${T - 12}" y2="${H - B}"></line>`;
-    g += `<text class="stok-label" x="${x(stok)}" y="${T - 16}" text-anchor="${x(stok) > W - 90 ? 'end' : 'middle'}">Jatah KDKMP ${singkat(stok)} ton</text>`;
+    g += `<text class="stok-label" x="${x(stok)}" y="${T - 16}" text-anchor="${x(stok) > W - 130 ? 'end' : x(stok) < L + 120 ? 'start' : 'middle'}">Jatah KDKMP ${singkat(stok)} ton (${singkat(sak(stok))} sak)</text>`;
     g += `</svg><div class="tip" id="tip" hidden></div>`;
+    // Di ponsel teks SVG mengecil; daftar ini mengulang angkanya dalam ukuran terbaca.
+    g += `<ul class="daftar-grafik">${data.map(d => {
+      const selisih = d.butuh3Ton - stok;
+      return `<li><b>${d.nama}</b> · ${angka(d.n)} KDKMP<br>Butuh ${singkat(d.butuh3Ton)} ton (${singkat(sak(d.butuh3Ton))} sak)<br><span style="color:var(${selisih > 0 ? '--crit' : '--ok'});font-weight:600">${selisih > 0 ? 'Defisit' : 'Sisa'} ${singkat(Math.abs(selisih))} ton (${singkat(sak(Math.abs(selisih)))} sak)</span></li>`;
+    }).join('')}</ul>`;
     const kotak = $('grafik');
     kotak.innerHTML = g;
     const tip = $('tip');
@@ -557,7 +578,7 @@ tfoot td { border-top: 1px solid var(--line-strong); font-weight: 600; color: va
       r.addEventListener('mousemove', e => {
         const d = data[+r.dataset.i];
         const selisih = stok - d.butuh3Ton;
-        tip.innerHTML = `<b>${d.nama}</b> · ${angka(d.n)} KDKMP<br>Butuh 3 bulan: ${angka(d.butuh3Ton)} ton<br>Jatah KDKMP: ${angka(stok)} ton<br>${selisih >= 0 ? 'Sisa' : 'Kurang'}: <b>${angka(Math.abs(selisih))} ton</b>`;
+        tip.innerHTML = `<b>${d.nama}</b> · ${angka(d.n)} KDKMP<br>Butuh 3 bulan: ${angka(d.butuh3Ton)} ton<br>Butuh dalam sak: ${angka(sak(d.butuh3Ton))} sak<br>Jatah KDKMP: ${angka(stok)} ton (${angka(sak(stok))} sak)<br>${selisih >= 0 ? 'Sisa' : 'Defisit'}: <b>${angka(Math.abs(selisih))} ton (${angka(sak(Math.abs(selisih)))} sak)</b>`;
         tip.hidden = false;
         const b = kotak.getBoundingClientRect();
         let kiri = e.clientX - b.left + 14;
