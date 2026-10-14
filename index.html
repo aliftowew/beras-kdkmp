@@ -210,6 +210,14 @@ tfoot td { border-top: 1px solid var(--line-strong); font-weight: 600; color: va
 .grafik .batang { fill: var(--accent); }
 .grafik .batang.lebih { fill: var(--crit); }
 .grafik .stok { stroke: var(--ink-2); stroke-width: 2; stroke-dasharray: 5 4; }
+.penggeser { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); border-radius: 16px; border: 1px solid var(--line); background: var(--surface-2); padding: 16px; }
+.geser { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.geser-kepala { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.geser-nilai { font-size: 1.25rem; font-weight: 800; letter-spacing: -0.02em; color: var(--accent-ink); font-variant-numeric: tabular-nums; }
+.geser input[type="range"] { width: 100%; accent-color: var(--accent); height: 28px; margin: 0; cursor: pointer; }
+.geser .bantuan { font-size: 0.75rem; color: var(--muted); }
+.titik-angka { font-size: 1.7rem; line-height: 1; font-weight: 800; letter-spacing: -0.03em; color: var(--ink); font-variant-numeric: tabular-nums; }
+.titik-daftar { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; }
 .daftar-grafik { display: none; list-style: none; margin: 12px 0 0; padding: 0; font-size: 0.85rem; color: var(--ink-2); }
 .daftar-grafik li { padding: 8px 0; border-top: 1px solid var(--line); font-variant-numeric: tabular-nums; }
 .daftar-grafik b { color: var(--ink); }
@@ -350,6 +358,19 @@ tfoot td { border-top: 1px solid var(--line-strong); font-weight: 600; color: va
                 <span><i class="garis"></i>SPHP yang masuk KDKMP</span>
               </div>
               <div class="grafik" id="grafik" style="max-width:760px"></div>
+              <div class="penggeser">
+                <label class="geser" for="in-porsi">
+                  <span class="geser-kepala"><span class="eyebrow">Beras SPHP yang masuk KDKMP</span><output class="geser-nilai" id="out-porsi" for="in-porsi"></output></span>
+                  <input id="in-porsi" type="range" min="0" max="100" step="1" value="50">
+                  <span class="bantuan" id="bantu-porsi"></span>
+                </label>
+                <label class="geser" for="in-share">
+                  <span class="geser-kepala"><span class="eyebrow">Warga desa yang beli beras di KDKMP</span><output class="geser-nilai" id="out-share" for="in-share"></output></span>
+                  <input id="in-share" type="range" min="0" max="100" step="1" value="100">
+                  <span class="bantuan" id="bantu-share"></span>
+                </label>
+              </div>
+              <div class="catatan aksen" id="titik-pas"></div>
             </div>
             <div class="kartu panel" style="box-shadow:none">
               <div class="gulir">
@@ -363,7 +384,7 @@ tfoot td { border-top: 1px solid var(--line-strong); font-weight: 600; color: va
         </div>
         <div class="gulir" style="border-top:1px solid var(--line)">
           <table>
-            <thead><tr><th scope="col">Tahap</th><th scope="col">Butuh 3 bulan (ton)</th><th scope="col">Selisih vs jatah KDKMP (ton)</th><th scope="col">Butuh setahun (ton)</th><th scope="col">Jatah setahun (4 × paket)</th><th scope="col">Kurang setahun (ton)</th></tr></thead>
+            <thead><tr><th scope="col">Tahap</th><th scope="col">Butuh 3 bulan (ton)</th><th scope="col">Defisit (−) / ke pasar lain (+), ton</th><th scope="col">Butuh setahun (ton)</th><th scope="col">Jatah setahun (4 × paket)</th><th scope="col">Kurang setahun (ton)</th></tr></thead>
             <tbody id="tb-tahun"></tbody>
           </table>
         </div>
@@ -378,15 +399,13 @@ tfoot td { border-top: 1px solid var(--line-strong); font-weight: 600; color: va
           <div class="isian-grid">
             <label class="isian"><span class="eyebrow">Jumlah KDKMP penerima</span><input id="in-n" type="number" min="1" step="1" value="1096"><span class="bantuan">koperasi</span></label>
             <label class="isian"><span class="eyebrow">Total beras SPHP</span><input id="in-ton" type="number" min="0" step="1000" value="1000000"><span class="bantuan">ton, untuk 3 bulan</span></label>
-            <label class="isian"><span class="eyebrow">Porsi SPHP masuk KDKMP</span><input id="in-porsi" type="number" min="0" max="100" step="1" value="50"><span class="bantuan">% dari total SPHP; sisanya lewat jalur lain</span></label>
             <label class="isian"><span class="eyebrow">Isi per kemasan</span><input id="in-kg" type="number" min="0.5" step="0.5" value="5"><span class="bantuan">kg per sak</span></label>
           </div>
           <div class="wadah-asumsi">
-            <div class="catatan-kecil" style="margin:0;display:flex;gap:6px;align-items:center"><span data-ikon="info"></span>Asumsi kebutuhan desa. Ganti dengan data resmi bila ada.</div>
+            <div class="catatan-kecil" style="margin:0;display:flex;gap:6px;align-items:center"><span data-ikon="info"></span>Asumsi kebutuhan desa. Ganti dengan data resmi bila ada. Dua porsi (%) diatur lewat penggeser di bawah grafik.</div>
             <div class="isian-grid">
               <label class="isian"><span class="eyebrow">Penduduk per desa</span><input id="in-pop" type="number" min="0" step="100" value="3400"><span class="bantuan">jiwa (± 284 juta ÷ 84 ribu desa/kel)</span></label>
               <label class="isian"><span class="eyebrow">Konsumsi beras</span><input id="in-cons" type="number" min="0" step="0.1" value="6.8"><span class="bantuan">kg per orang per bulan</span></label>
-              <label class="isian"><span class="eyebrow">Porsi dipenuhi SPHP KDKMP</span><input id="in-share" type="number" min="0" max="100" step="1" value="100"><span class="bantuan">% dari konsumsi desa</span></label>
             </div>
           </div>
         </div>
@@ -470,7 +489,7 @@ tfoot td { border-top: 1px solid var(--line-strong); font-weight: 600; color: va
     let pesan;
     if (st.label === 'Defisit') pesan = `Tiap KDKMP dapat <strong>${angka(perBulan)} sak</strong> per bulan, kebutuhan desanya sekitar <strong>${angka(butuh)} sak</strong>. Kurang ${angka(butuh - perBulan)} sak per KDKMP per bulan (${angka((1 - rasio) * 100)}% di bawah kebutuhan).`;
     else if (st.label === 'Cukup') pesan = `Tiap KDKMP dapat <strong>${angka(perBulan)} sak</strong> per bulan, kebutuhan desanya sekitar <strong>${angka(butuh)} sak</strong>. Pasokan menutup kebutuhan (${angka(rasio * 100)}%).`;
-    else if (st.label === 'Berlebih') pesan = `Tiap KDKMP dapat <strong>${angka(perBulan)} sak</strong> per bulan, padahal kebutuhan desanya sekitar <strong>${angka(butuh)} sak</strong>, jadi ${angka(rasio, 1)} kali lipat. Stok tidak defisit, tapi koperasi berisiko kewalahan menyimpan dan menjual. Perlu cek kapasitas gudang tiap KDKMP.`;
+    else if (st.label === 'Berlebih') pesan = `Tiap KDKMP dapat <strong>${angka(perBulan)} sak</strong> per bulan, padahal kebutuhan desanya sekitar <strong>${angka(butuh)} sak</strong>, jadi ${angka(rasio, 1)} kali lipat. Cukup isi tiap KDKMP sesuai kebutuhannya; kelebihan ± ${singkat((s.tonKdkmp - s.n * butuh * 3 * s.kg / 1000) * 1000 / s.kg)} sak (${singkat(s.tonKdkmp - s.n * butuh * 3 * s.kg / 1000)} ton) per 3 bulan masuk ke pasar lain.`;
     else pesan = 'Isi asumsi penduduk, konsumsi, dan porsi SPHP di bagian Angka dasar untuk melihat status.';
     const v = $('vonis');
     v.className = `catatan ${st.nada === 'netral' ? 'aksen' : st.nada}`;
@@ -515,6 +534,24 @@ tfoot td { border-top: 1px solid var(--line-strong); font-weight: 600; color: va
       return `<tr class="${g.n === s.n ? 'terpilih' : ''}"><td class="kuat">${g.nama} (${angka(g.n)})</td><td>${angka(g.butuh3Ton)}</td><td style="color:var(${selisih < 0 ? '--crit' : '--ok'});font-weight:600">${selisih < 0 ? '−' : '+'}${angka(Math.abs(selisih))}</td><td>${angka(tahunButuh)}</td><td>${angka(tahunStok)}</td><td${kurang > 0 ? ' style="color:var(--crit);font-weight:600"' : ''}>${angka(kurang)}</td></tr>`;
     }).join('');
 
+    // Penggeser: tampilkan nilai dan artinya dalam ton.
+    $('out-porsi').textContent = `${angka(s.porsiKdkmp * 100)}%`;
+    $('bantu-porsi').textContent = `${angka(s.tonKdkmp)} ton ke KDKMP; ${angka(s.ton - s.tonKdkmp)} ton ke pasar lain`;
+    $('out-share').textContent = `${angka(s.share * 100)}%`;
+    $('bantu-share').textContent = `kebutuhan ± ${angka(butuh)} sak per desa per bulan`;
+
+    // Titik pas: jumlah KDKMP yang membuat jatah tepat habis tanpa defisit.
+    const butuhPerKdkmp3Ton = butuh * 3 * s.kg / 1000;
+    const titikPas = butuhPerKdkmp3Ton > 0 ? Math.floor(s.tonKdkmp / butuhPerKdkmp3Ton) : NaN;
+    const saranTahap = data.map(g => {
+      const perlu = s.ton > 0 ? g.butuh3Ton / s.ton * 100 : Infinity;
+      if (perlu <= 100) return `<li><b>${g.nama}</b> (${angka(g.n)} KDKMP): porsi masuk KDKMP minimal <b>${angka(Math.ceil(perlu))}%</b></li>`;
+      return `<li><b>${g.nama}</b> (${angka(g.n)} KDKMP): tetap defisit walau 100% masuk KDKMP; perlu tambahan ${singkat(g.butuh3Ton - s.ton)} ton (${singkat((g.butuh3Ton - s.ton) * 1000 / s.kg)} sak) SPHP</li>`;
+    }).join('');
+    $('titik-pas').innerHTML = Number.isFinite(titikPas)
+      ? `${svg('groups')}<div class="catatan-isi"><span class="eyebrow">Titik pas</span><div class="titik-angka">${angka(titikPas)} KDKMP</div><p>Dengan jatah ${angka(s.tonKdkmp)} ton (${singkat(totalSak)} sak) per 3 bulan, beras cukup untuk sekitar <strong>${angka(titikPas)} KDKMP</strong> yang masing-masing butuh ${angka(butuh)} sak per bulan. Lebih dari itu defisit; kurang dari itu, kelebihannya masuk ke pasar lain.</p><ul class="titik-daftar">${saranTahap}</ul></div>`
+      : `${svg('info')}<div class="catatan-isi"><p>Isi asumsi penduduk, konsumsi, dan porsi warga untuk menghitung titik pas.</p></div>`;
+
     gambarGrafik(data, s.tonKdkmp, s.kg);
     tulisRingkasan(s, totalSak, per3, butuh, st, data);
   }
@@ -550,7 +587,7 @@ tfoot td { border-top: 1px solid var(--line-strong); font-weight: 600; color: va
       const defisit = d.butuh3Ton - stok;
       const lebih = defisit > 0;
       const baris1 = `${singkat(d.butuh3Ton)} ton (${singkat(sak(d.butuh3Ton))} sak)`;
-      const baris2 = lebih ? `Defisit ${singkat(defisit)} ton (${singkat(sak(defisit))} sak)` : `Sisa ${singkat(-defisit)} ton (${singkat(sak(-defisit))} sak)`;
+      const baris2 = lebih ? `Defisit ${singkat(defisit)} ton (${singkat(sak(defisit))} sak)` : `Ke pasar lain ${singkat(-defisit)} ton (${singkat(sak(-defisit))} sak)`;
       g += `<text x="${L - 12}" y="${y + h / 2 - 1}" text-anchor="end">${d.nama}</text>`;
       g += `<text class="sub" x="${L - 12}" y="${y + h / 2 + 14}" text-anchor="end">${angka(d.n)} KDKMP</text>`;
       g += `<path class="batang ${lebih ? 'lebih' : ''}" d="M${L},${y} H${L + w - 4} a4,4 0 0 1 4,4 V${y + h - 4} a4,4 0 0 1 -4,4 H${L} Z"></path>`;
@@ -558,7 +595,7 @@ tfoot td { border-top: 1px solid var(--line-strong); font-weight: 600; color: va
       const lx = L + w + 8, muat = lx + baris1.length * 6.9 < W;
       const ax = muat ? lx : L + w - 8, anchor = muat ? 'start' : 'end';
       g += `<text class="angka ${muat ? 'halo' : ''}" x="${ax}" y="${y + h / 2 + 4}" text-anchor="${anchor}"${muat ? '' : ' style="fill:var(--surface)"'}>${baris1}</text>`;
-      // Baris defisit/sisa di bawah batang, rata kanan dengan ujung batang supaya tidak bertabrakan.
+      // Baris defisit/pasar lain di bawah batang, rata kanan dengan ujung batang supaya tidak bertabrakan.
       const bx = Math.max(L + baris2.length * 6.6, L + w);
       g += `<text class="selisih halo" x="${Math.min(bx, W - 2)}" y="${y + h + 15}" text-anchor="end" style="fill:var(${lebih ? '--crit' : '--ok'})">${baris2}</text>`;
       g += `<rect class="sasaran" x="0" y="${y - 6}" width="${W}" height="${h + 26}" data-i="${i}"></rect>`;
@@ -569,7 +606,7 @@ tfoot td { border-top: 1px solid var(--line-strong); font-weight: 600; color: va
     // Di ponsel teks SVG mengecil; daftar ini mengulang angkanya dalam ukuran terbaca.
     g += `<ul class="daftar-grafik">${data.map(d => {
       const selisih = d.butuh3Ton - stok;
-      return `<li><b>${d.nama}</b> · ${angka(d.n)} KDKMP<br>Butuh ${singkat(d.butuh3Ton)} ton (${singkat(sak(d.butuh3Ton))} sak)<br><span style="color:var(${selisih > 0 ? '--crit' : '--ok'});font-weight:600">${selisih > 0 ? 'Defisit' : 'Sisa'} ${singkat(Math.abs(selisih))} ton (${singkat(sak(Math.abs(selisih)))} sak)</span></li>`;
+      return `<li><b>${d.nama}</b> · ${angka(d.n)} KDKMP<br>Butuh ${singkat(d.butuh3Ton)} ton (${singkat(sak(d.butuh3Ton))} sak)<br><span style="color:var(${selisih > 0 ? '--crit' : '--ok'});font-weight:600">${selisih > 0 ? 'Defisit' : 'Ke pasar lain'} ${singkat(Math.abs(selisih))} ton (${singkat(sak(Math.abs(selisih)))} sak)</span></li>`;
     }).join('')}</ul>`;
     const kotak = $('grafik');
     kotak.innerHTML = g;
@@ -578,7 +615,7 @@ tfoot td { border-top: 1px solid var(--line-strong); font-weight: 600; color: va
       r.addEventListener('mousemove', e => {
         const d = data[+r.dataset.i];
         const selisih = stok - d.butuh3Ton;
-        tip.innerHTML = `<b>${d.nama}</b> · ${angka(d.n)} KDKMP<br>Butuh 3 bulan: ${angka(d.butuh3Ton)} ton<br>Butuh dalam sak: ${angka(sak(d.butuh3Ton))} sak<br>Jatah KDKMP: ${angka(stok)} ton (${angka(sak(stok))} sak)<br>${selisih >= 0 ? 'Sisa' : 'Defisit'}: <b>${angka(Math.abs(selisih))} ton (${angka(sak(Math.abs(selisih)))} sak)</b>`;
+        tip.innerHTML = `<b>${d.nama}</b> · ${angka(d.n)} KDKMP<br>Butuh 3 bulan: ${angka(d.butuh3Ton)} ton<br>Butuh dalam sak: ${angka(sak(d.butuh3Ton))} sak<br>Jatah KDKMP: ${angka(stok)} ton (${angka(sak(stok))} sak)<br>${selisih >= 0 ? 'Masuk pasar lain' : 'Defisit'}: <b>${angka(Math.abs(selisih))} ton (${angka(sak(Math.abs(selisih)))} sak)</b>`;
         tip.hidden = false;
         const b = kotak.getBoundingClientRect();
         let kiri = e.clientX - b.left + 14;
@@ -605,13 +642,16 @@ tfoot td { border-top: 1px solid var(--line-strong); font-weight: 600; color: va
     });
     L.push(`- Total 3 bulan: ± ${angka(per3)} sak`);
     L.push('');
-    L.push(`Kebutuhan per desa (asumsi ${angka(s.pop)} jiwa × ${angka(s.cons, 1)} kg × ${angka(s.share * 100)}%): ± ${angka(butuh)} sak/bulan.`);
+    L.push(`Kebutuhan per desa (asumsi ${angka(s.pop)} jiwa × ${angka(s.cons, 1)} kg × ${angka(s.share * 100)}% warga beli di KDKMP): ± ${angka(butuh)} sak/bulan.`);
     L.push(`Status ${angka(s.n)} KDKMP: ${st.label.toUpperCase()}.`);
+    L.push('');
+    const tp = butuh > 0 ? Math.floor(s.tonKdkmp / (butuh * 3 * s.kg / 1000)) : NaN;
+    L.push(`Titik pas: jatah cukup untuk ± ${angka(tp)} KDKMP; lebih dari itu defisit.`);
     L.push('');
     L.push(`Per tahap (jatah KDKMP ${angka(s.tonKdkmp)} ton per 3 bulan):`);
     data.forEach(g => {
       const selisih = s.tonKdkmp - g.butuh3Ton;
-      L.push(`- ${g.nama}, ${angka(g.n)} KDKMP: dapat ${angka(g.pm)} sak/bln per KDKMP; butuh ${angka(g.butuh3Ton)} ton/3 bln; ${selisih >= 0 ? 'sisa' : 'kurang'} ${angka(Math.abs(selisih))} ton (${status(g.rasio).label.toLowerCase()}).`);
+      L.push(`- ${g.nama}, ${angka(g.n)} KDKMP: dapat ${angka(g.pm)} sak/bln per KDKMP; butuh ${angka(g.butuh3Ton)} ton/3 bln; ${selisih >= 0 ? 'lebih' : 'kurang'} ${angka(Math.abs(selisih))} ton${selisih >= 0 ? ', masuk pasar lain' : ''} (${status(g.rasio).label.toLowerCase()}).`);
     });
     $('ringkasan-teks').textContent = L.join('\n');
   }
